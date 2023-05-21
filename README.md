@@ -1,4 +1,4 @@
-Fee Addr
+Fee Adder
 ========================
 
 Accounting program
@@ -26,6 +26,6 @@ Usage
 ### Run 
 
 ```bash
-./fee_addr
+./fee_adder
 ```
 
