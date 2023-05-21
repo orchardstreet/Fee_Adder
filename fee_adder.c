@@ -54,11 +54,11 @@ void do_add(GtkWidget *widget, gpointer model)
 		gtk_text_buffer_set_text(error_buffer,"Fee amount entered has an invalid format."
 				" Please enter ascii digits.  You can include a decimal.",-1);
 		return;
-	} else if (number == HUGE_VAL || number == -HUGE_VAL) {
+	} else if (number >= HUGE_VAL || number <= -HUGE_VAL) {
 		gtk_text_buffer_set_text(error_buffer,"Fee amount entered has too many digits",-1);
 		return;
 	} else {
-		gtk_text_buffer_set_text(error_buffer,"",-1);
+		gtk_text_buffer_set_text(error_buffer," ",-1);
 	}
 
 	gtk_list_store_insert_with_values(model, NULL, -1,
