@@ -11,11 +11,11 @@ Installation
 ```bash
 sudo apt install libgtk-3-dev build-essential unzip wget -y
 
-wget https://github.com/orchardstreet/fee_addr/archive/refs/heads/master.zip
+wget https://github.com/orchardstreet/fee_adder/archive/refs/heads/master.zip
 
 unzip master.zip
 
-cd fee_addr-master
+cd fee_adder-master
 
 ./compile
 ```
