@@ -4,151 +4,168 @@
 #include <limits.h>
 #include <string.h>
 #define MAX_ENTRIES 100000
-#define MAX_YEAR_CHARS 5
+#define MAX_DATE_CHARS 11
 #define MAX_PERSON_CHARS 100
 #define MAX_INDIVIDUAL_FEE_NUMBER_CHARS 21
 
 enum exit_codes {SUCCESS,FAILURE};
-static GtkWidget *year;
-static GtkWidget *person;
-static GtkWidget *amount;
-static GtkWidget *year_label;
-static GtkWidget *person_label;
-static GtkWidget *amount_label;
-static GtkWidget *add_label;
-static GtkWidget *add_label2;
-GtkWidget *listbox1;
+enum columns {DATE_C, PERSON_C, AMOUNT_C, TOTAL_COLUMNS};
 
 struct entry {
-	long double amount_float;
+	char date_string[MAX_DATE_CHARS];
+	char person_string[MAX_PERSON_CHARS];
+	double amount_float;
 	char amount_string[MAX_INDIVIDUAL_FEE_NUMBER_CHARS];
-	char year[MAX_YEAR_CHARS];
-	char person[MAX_PERSON_CHARS];
+	unsigned char year;
+	unsigned char day;
+	unsigned char month;
 };
 
 struct entry entries[MAX_ENTRIES];
 
-static GtkWidget * create_row (const gchar *text)
+void do_add(GtkWidget *widget, gpointer model)
 {
-  GtkWidget *row, *handle, *box, *label, *image;
 
-  printf("adding %s\n",text);
-  row = gtk_list_box_row_new ();
+gtk_list_store_insert_with_values(model, NULL, -1,
+	DATE_C, "01/02/23",
+	PERSON_C, "Jack",
+	AMOUNT_C, 1000.1,
+	-1);
 
-  label = gtk_label_new (text);
-  gtk_container_add (GTK_CONTAINER (row), label);
-
-
-  return row;
 }
-
-void do_add(void)
-{
-	GtkWidget *row;
-	/*
-	if(row_index >= MAX_ENTRIES) {
-		fprintf(stderr,"Max entries reached: %d\n",MAX_ENTRIES);
-		exit(EXIT_FAILURE);
-	}
-	*/
-
-	//rows[row_index] = create_row("new");
-	row = create_row("new");
-	gtk_list_box_insert (GTK_LIST_BOX (listbox1), row, -1 );
-	gtk_widget_show_all(listbox1);
-	//gtk_widget_show(listbox1);
-	//row_index++;
-}
-
-//GtkWidget *rows[MAX_ENTRIES];
-unsigned long row_index = 0;
 
 int main(int argc, char **argv)
 {
-	GtkWidget *window;
-	GtkWidget *grid;
-	GtkWidget *scrolled_window;
-	GtkWidget *add;
-	GtkWidget *box;
-	GtkWidget *row3;
+
+	/* Init variables */
+	GtkWidget *window, *grid, *scrolled_window, *add, *box, *year, *person, 
+	*amount, *year_label, *person_label, *amount_label, *add_label, *tree_view;
+	GtkListStore *model;
+	GtkTreeViewColumn *column;
+
+	/* Init GTK */
 	gtk_init(&argc,&argv);
 	
+	/* Temp debug info */
 	printf("%d\n",LDBL_DIG);
 	memset(&entries,0,sizeof(struct entry) * MAX_ENTRIES);
-	//memset(&rows,0,sizeof(rows) * MAX_ENTRIES);
 
+	/* Create vertically oriented box to pack program widgets into */
 	box = gtk_box_new(GTK_ORIENTATION_VERTICAL,20);
+
+	/* Create window, set title, border width, and size */
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_title (GTK_WINDOW(window) , "Fee Adder" );
+	gtk_container_set_border_width (GTK_CONTAINER(window),10);
+	gtk_window_set_default_size (GTK_WINDOW (window), 300, 500);
+
+	/* Destroy window on close */
 	g_signal_connect(window,"destroy",G_CALLBACK(gtk_main_quit),NULL);
 
+	/* Create grid for value entry */
 	grid = gtk_grid_new();
-	//gtk_container_add(GTK_CONTAINER(window),grid);	
+
+	/* Add grid to box */
 	gtk_box_pack_start (GTK_BOX (box), grid, 0, 0, 0);
 
-	gtk_window_set_title (GTK_WINDOW(window) , "Fee Addr" );
-	gtk_container_set_border_width (GTK_CONTAINER(window),10);
-
+	/* Add margin to value entry grid */
 	gtk_widget_set_margin_top(grid,10);
 	gtk_widget_set_margin_start(grid,50);
 	gtk_widget_set_margin_end(grid,50);
-	gtk_widget_set_margin_bottom(grid,30);
+	gtk_widget_set_margin_bottom(grid,0);
 
+	/* Add year entry to value entry grid */
 	year_label = gtk_label_new("Year");
 	gtk_grid_attach(GTK_GRID(grid),year_label,0,0,1,1);
 	year = gtk_entry_new();
 	gtk_grid_attach(GTK_GRID(grid),year,0,1,1,1);
 	gtk_widget_set_margin_end(year,10);
 
+	/* Add person entry to value entry grid */
 	person_label = gtk_label_new("Person");
 	gtk_grid_attach(GTK_GRID(grid),person_label,1,0,1,1);
 	person = gtk_entry_new();
 	gtk_grid_attach(GTK_GRID(grid),person,1,1,1,1);
 	gtk_widget_set_margin_end(person,10);
 
+	/* Add amount entry to value entry grid */
 	amount_label = gtk_label_new("Amount");
 	gtk_grid_attach(GTK_GRID(grid),amount_label,2,0,1,1);
 	amount = gtk_entry_new();
 	gtk_grid_attach(GTK_GRID(grid),amount,2,1,1,1);
 	gtk_widget_set_margin_end(amount,10);
 
+	/* Create a scrollable window */
+	scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+	/* Create margin for scrollable window */
+	gtk_widget_set_margin_top(scrolled_window,0);
+	gtk_widget_set_margin_start(scrolled_window,50);
+	gtk_widget_set_margin_end(scrolled_window,50);
+	gtk_widget_set_margin_bottom(scrolled_window,70);
+	/* Always include a vertical scroll cursor on scroll window */
+	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window),
+                                    GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
+	/* Fill all space */
+	/* Add scrollable window to box */
+	gtk_box_pack_start (GTK_BOX (box), scrolled_window, TRUE, TRUE, 0);
+
+	/* Create model for table */
+	model = gtk_list_store_new(
+		TOTAL_COLUMNS,  /* required parameter, total columns */
+		G_TYPE_STRING,  /* Second column, Date, DATE_C */
+		G_TYPE_STRING,  /* Third column, Person, PERSON_C */
+		G_TYPE_DOUBLE  /* Fourth column, AMOUNT, AMOUNT_C */
+		);
+	/* Create headers */
+	gtk_list_store_insert_with_values(model, NULL, -1,
+		DATE_C, "Date",
+		PERSON_C, "Person",
+		AMOUNT_C, 100.20,
+		-1);
+	/* Create tree view for table using model */
+	tree_view = gtk_tree_view_new_with_model(GTK_TREE_MODEL(model));
+	/* Unref model */
+	g_object_unref(model);
+
+	/* Add columns to tree view */
+	column = gtk_tree_view_column_new_with_attributes("Date",
+		gtk_cell_renderer_spin_new(),
+		"text", DATE_C,
+		NULL);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
+
+	column = gtk_tree_view_column_new_with_attributes("Person",
+		gtk_cell_renderer_text_new(),
+		"text", PERSON_C,
+		NULL);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
+
+	column = gtk_tree_view_column_new_with_attributes("Amount",
+		gtk_cell_renderer_text_new(),
+		"text", AMOUNT_C,
+		NULL);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
+
+
+	/* Add 'add' button to value entry grid */
 	add_label = gtk_label_new("");
 	gtk_grid_attach(GTK_GRID(grid),add_label,3,0,1,1);
 	add = gtk_button_new_with_label("Add");
 	gtk_grid_attach(GTK_GRID(grid), add, 3, 1, 1, 1);
 
-	scrolled_window = gtk_scrolled_window_new(NULL, NULL);
-	gtk_widget_set_margin_top(scrolled_window,10);
-	gtk_widget_set_margin_start(scrolled_window,50);
-	gtk_widget_set_margin_end(scrolled_window,50);
-	gtk_widget_set_margin_bottom(scrolled_window,100);
-	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window),
-                                    GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
+	/* After clicking add, call 'do_add' function */
+	g_signal_connect(add,"clicked",G_CALLBACK(do_add),model);
 
-	gtk_box_pack_start (GTK_BOX (box), scrolled_window, 0, 0, 0);
-
-
-	listbox1 = gtk_list_box_new();
-	gtk_container_add(GTK_CONTAINER(scrolled_window),listbox1);	
-	g_signal_connect(add,"clicked",G_CALLBACK(do_add),NULL);
-	add_label2 = gtk_label_new("test");
-	//gtk_container_add(GTK_CONTAINER(listbox1),add_label2);	
-	//gtk_list_box_insert (GTK_LIST_BOX (listbox1), add_label2, -1 );
-	//gtk_grid_attach(GTK_GRID(listbox1),add_label2,0,0,1,1);
-  row3 = gtk_list_box_row_new ();
-
-  //box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 10);
-  //g_object_set (box, "margin-start", 10, "margin-end", 10, NULL);
-  //gtk_container_add (GTK_CONTAINER (row), box);
-  //gtk_container_add_with_properties (GTK_CONTAINER (row), label, "expand", TRUE, NULL);
-  gtk_container_add (GTK_CONTAINER (row3), add_label2);
-	gtk_list_box_insert (GTK_LIST_BOX (listbox1), row3, -1 );
-
+	/* Add tree view to scrolled window */
+	gtk_container_add(GTK_CONTAINER(scrolled_window),tree_view);	
+	gtk_widget_set_hexpand(scrolled_window, TRUE);
+	gtk_widget_set_vexpand(scrolled_window, TRUE);
+	/* Add box to window */
 	gtk_container_add(GTK_CONTAINER(window),box);
-    /* pack the table into the scrolled window */
+
+	/* Show everything */
 	gtk_widget_show_all(box);
-	gtk_widget_show_all(listbox1);
 	gtk_widget_show_all(scrolled_window);
-	//gtk_widget_show(listbox1);
 	gtk_widget_show_all(window);
 	gtk_main();
 
