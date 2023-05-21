@@ -142,7 +142,6 @@ int main(int argc, char **argv)
 	/* Always include a vertical scroll cursor on scroll window */
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window),
                                     GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
-	/* Fill all space */
 	/* Add scrollable window to box */
 	gtk_box_pack_start (GTK_BOX (box), scrolled_window, TRUE, TRUE, 0);
 
