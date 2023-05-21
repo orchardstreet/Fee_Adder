@@ -91,8 +91,7 @@ int main(int argc, char **argv)
 	/* Create window, set title, border width, and size */
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title (GTK_WINDOW(window) , "Fee Adder" );
-	gtk_container_set_border_width (GTK_CONTAINER(window),10);
-	gtk_window_set_default_size (GTK_WINDOW (window), 300, 500);
+	gtk_container_set_border_width (GTK_CONTAINER(window),10); gtk_window_set_default_size (GTK_WINDOW (window), 300, 500);
 
 	/* Destroy window on close */
 	g_signal_connect(window,"destroy",G_CALLBACK(gtk_main_quit),NULL);
@@ -154,12 +153,16 @@ int main(int argc, char **argv)
 		G_TYPE_STRING,  /* Third column, Person, PERSON_C */
 		G_TYPE_DOUBLE  /* Fourth column, AMOUNT, AMOUNT_C */
 		);
-	/* Create headers */
+
+	/* Test row */
+	/*
 	gtk_list_store_insert_with_values(model, NULL, -1,
 		DATE_C, "Date",
 		PERSON_C, "Person",
 		AMOUNT_C, 100.20,
 		-1);
+	*/
+
 	/* Create tree view for table using model */
 	tree_view = gtk_tree_view_new_with_model(GTK_TREE_MODEL(model));
 	/* Unref model */
