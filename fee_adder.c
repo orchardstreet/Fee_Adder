@@ -67,7 +67,7 @@ void do_add(GtkWidget *widget, gpointer model)
 					AMOUNT_C, number,
 					-1);
 
-	gtk_widget_show(error_widget);
+	//gtk_widget_show(error_widget);
 
 }
 
