@@ -17,6 +17,8 @@ unzip master.zip
 
 cd fee_adder-master
 
+chmod +x compile.sh
+
 ./compile
 ```
 
