@@ -3,6 +3,8 @@
 #include <gtk/gtk.h>
 #include <limits.h>
 #include <string.h>
+#define _ISOC99_SOURCE 
+#include <math.h>
 #define MAX_ENTRIES 100000
 #define MAX_DATE_CHARS 11
 #define MAX_PERSON_CHARS 100
@@ -10,6 +12,9 @@
 
 enum exit_codes {SUCCESS,FAILURE};
 enum columns {DATE_C, PERSON_C, AMOUNT_C, TOTAL_COLUMNS};
+static GtkWidget *amount, *year, *person;
+static GtkTextBuffer *error_buffer;
+static GtkWidget *error_widget;
 
 struct entry {
 	char date_string[MAX_DATE_CHARS];
@@ -26,11 +31,43 @@ struct entry entries[MAX_ENTRIES];
 void do_add(GtkWidget *widget, gpointer model)
 {
 
-gtk_list_store_insert_with_values(model, NULL, -1,
-	DATE_C, "01/02/23",
-	PERSON_C, "Jack",
-	AMOUNT_C, 1000.1,
-	-1);
+	double number;
+	char *endptr;
+	char *amount_ptr = (char *)gtk_entry_get_text(GTK_ENTRY(amount));
+	char *year_ptr = (char *)gtk_entry_get_text(GTK_ENTRY(year));
+	char *person_ptr = (char *)gtk_entry_get_text(GTK_ENTRY(person));
+
+	if(!strlen(year_ptr)) {
+		gtk_text_buffer_set_text(error_buffer,"Please enter a date",-1);
+		return;
+	} else if (!strlen(person_ptr)) {
+		gtk_text_buffer_set_text(error_buffer,"Please enter a person",-1);
+		return;
+	} else if (!strlen(amount_ptr)) {
+		gtk_text_buffer_set_text(error_buffer,"Please enter a fee amount",-1);
+		return;
+	}
+
+	number = strtod(amount_ptr,&endptr);
+
+	if(endptr == amount_ptr) {
+		gtk_text_buffer_set_text(error_buffer,"Fee amount entered has an invalid format."
+				" Please enter ascii digits.  You can include a decimal.",-1);
+		return;
+	} else if (number == HUGE_VAL || number == -HUGE_VAL) {
+		gtk_text_buffer_set_text(error_buffer,"Fee amount entered has too many digits",-1);
+		return;
+	} else {
+		gtk_text_buffer_set_text(error_buffer,"",-1);
+	}
+
+	gtk_list_store_insert_with_values(model, NULL, -1,
+					DATE_C, year_ptr,
+					PERSON_C, person_ptr,
+					AMOUNT_C, number,
+					-1);
+
+	gtk_widget_show(error_widget);
 
 }
 
@@ -38,8 +75,8 @@ int main(int argc, char **argv)
 {
 
 	/* Init variables */
-	GtkWidget *window, *grid, *scrolled_window, *add, *box, *year, *person, 
-	*amount, *year_label, *person_label, *amount_label, *add_label, *tree_view;
+	GtkWidget *window, *grid, *scrolled_window, *add, *box, 
+	*year_label, *person_label, *amount_label, *add_label, *tree_view;
 	GtkListStore *model;
 	GtkTreeViewColumn *column;
 
@@ -69,7 +106,7 @@ int main(int argc, char **argv)
 	gtk_box_pack_start (GTK_BOX (box), grid, 0, 0, 0);
 
 	/* Add margin to value entry grid */
-	gtk_widget_set_margin_top(grid,10);
+	gtk_widget_set_margin_top(grid,15);
 	gtk_widget_set_margin_start(grid,50);
 	gtk_widget_set_margin_end(grid,50);
 	gtk_widget_set_margin_bottom(grid,0);
@@ -78,6 +115,7 @@ int main(int argc, char **argv)
 	year_label = gtk_label_new("Year");
 	gtk_grid_attach(GTK_GRID(grid),year_label,0,0,1,1);
 	year = gtk_entry_new();
+	gtk_widget_set_margin_top(year,2);
 	gtk_grid_attach(GTK_GRID(grid),year,0,1,1,1);
 	gtk_widget_set_margin_end(year,10);
 
@@ -85,6 +123,7 @@ int main(int argc, char **argv)
 	person_label = gtk_label_new("Person");
 	gtk_grid_attach(GTK_GRID(grid),person_label,1,0,1,1);
 	person = gtk_entry_new();
+	gtk_widget_set_margin_top(person,2);
 	gtk_grid_attach(GTK_GRID(grid),person,1,1,1,1);
 	gtk_widget_set_margin_end(person,10);
 
@@ -92,6 +131,7 @@ int main(int argc, char **argv)
 	amount_label = gtk_label_new("Amount");
 	gtk_grid_attach(GTK_GRID(grid),amount_label,2,0,1,1);
 	amount = gtk_entry_new();
+	gtk_widget_set_margin_top(amount,2);
 	gtk_grid_attach(GTK_GRID(grid),amount,2,1,1,1);
 	gtk_widget_set_margin_end(amount,10);
 
@@ -101,7 +141,7 @@ int main(int argc, char **argv)
 	gtk_widget_set_margin_top(scrolled_window,0);
 	gtk_widget_set_margin_start(scrolled_window,50);
 	gtk_widget_set_margin_end(scrolled_window,50);
-	gtk_widget_set_margin_bottom(scrolled_window,70);
+	gtk_widget_set_margin_bottom(scrolled_window,0);
 	/* Always include a vertical scroll cursor on scroll window */
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window),
                                     GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
@@ -152,6 +192,12 @@ int main(int argc, char **argv)
 	gtk_grid_attach(GTK_GRID(grid),add_label,3,0,1,1);
 	add = gtk_button_new_with_label("Add");
 	gtk_grid_attach(GTK_GRID(grid), add, 3, 1, 1, 1);
+
+	/* error widget */
+	error_buffer = gtk_text_buffer_new(NULL);
+	error_widget = gtk_text_view_new_with_buffer(error_buffer);
+	gtk_text_buffer_set_text(error_buffer," ",-1);
+	gtk_box_pack_start (GTK_BOX (box), error_widget, 0, 0, 0);
 
 	/* After clicking add, call 'do_add' function */
 	g_signal_connect(add,"clicked",G_CALLBACK(do_add),model);
