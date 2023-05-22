@@ -6,16 +6,20 @@
 #define _ISOC99_SOURCE 
 #include <math.h>
 #define MAX_ENTRIES 100000
-#define MAX_DATE_CHARS 11
-#define MAX_PERSON_CHARS 100
+#define MAX_DATE_CHARS 9 
+#define MAX_PERSON_CHARS 100 /* adjustable */
 #define MAX_INDIVIDUAL_FEE_NUMBER_CHARS 21
 
 enum exit_codes {SUCCESS,FAILURE};
-enum columns {DATE_C, PERSON_C, AMOUNT_C, TOTAL_COLUMNS};
-static GtkWidget *amount, *year, *person;
+enum columns {DATE_C, PERSON_C, AMOUNT_C, SHOW_C, TOTAL_COLUMNS};
+static GtkWidget *amount, *date, *person;
 static GtkTextBuffer *error_buffer;
 static GtkWidget *error_widget;
 
+/* I only need this if I can't just inactivate a row */
+/* don't need it */
+/* if uncommenting remember to memset to 0 */
+/*
 struct entry {
 	char date_string[MAX_DATE_CHARS];
 	char person_string[MAX_PERSON_CHARS];
@@ -27,45 +31,97 @@ struct entry {
 };
 
 struct entry entries[MAX_ENTRIES];
+*/
+
+void skip_whitespace(char **text_skip) {
+	for(;**text_skip == ' ';(*text_skip)++) {}; 
+}
+
+unsigned char str_to_double(char *str, double *number)
+{
+
+	char *endptr;
+
+	if (!strlen(str)) {
+		gtk_text_buffer_set_text(error_buffer,"Please enter a fee amount",-1);
+		return FAILURE;
+	}
+
+	*number = strtod(str,&endptr);
+
+	if(endptr == str) {
+		gtk_text_buffer_set_text(error_buffer,"Fee amount entered has an invalid format."
+				" Please enter ascii digits.  You can include a decimal.",-1);
+		return FAILURE;
+	} else if (*number >= HUGE_VAL || *number <= -HUGE_VAL) {
+		gtk_text_buffer_set_text(error_buffer,"Fee amount entered has too many digits",-1);
+		return FAILURE;
+	} else if (*endptr != '\0') {
+		skip_whitespace(&endptr);
+		if(*endptr != '\0') {
+			gtk_text_buffer_set_text(error_buffer,"Only digits in fee amount please",-1);
+			return FAILURE;
+		}
+	} else {
+		gtk_text_buffer_set_text(error_buffer," ",-1);
+	}
+
+	return SUCCESS;
+
+}
+
+unsigned char validate_person(char *text)
+{
+	if(!strlen(text)) {
+		gtk_text_buffer_set_text(error_buffer,"Please enter a person",-1);
+		return FAILURE;
+	} else if(strlen(text) > MAX_PERSON_CHARS - 1)  {
+		gtk_text_buffer_set_text(error_buffer,"Name of person is too long, recompile to allow longer person names",-1);
+		return FAILURE;
+	}
+}
+
+unsigned char validate_date (char *text)
+{
+	if(!strlen(text)) {
+		gtk_text_buffer_set_text(error_buffer,"Please enter a date",-1);
+		return FAILURE;
+	} else if(strlen(text) > MAX_DATE_CHARS - 1)  {
+		gtk_text_buffer_set_text(error_buffer,"Date is too long, must be in yy/mm/dd format",-1);
+		return FAILURE;
+	}
+}
 
 void do_add(GtkWidget *widget, gpointer model)
 {
 
 	double number;
-	char *endptr;
-	char *amount_ptr = (char *)gtk_entry_get_text(GTK_ENTRY(amount));
-	char *year_ptr = (char *)gtk_entry_get_text(GTK_ENTRY(year));
+	/* These data at these pointers can't be modified */
+	/* ideally we should copy this into a global array */
+	char *date_ptr = (char *)gtk_entry_get_text(GTK_ENTRY(date));
 	char *person_ptr = (char *)gtk_entry_get_text(GTK_ENTRY(person));
+	char *amount_ptr = (char *)gtk_entry_get_text(GTK_ENTRY(amount));
 
-	if(!strlen(year_ptr)) {
-		gtk_text_buffer_set_text(error_buffer,"Please enter a date",-1);
-		return;
-	} else if (!strlen(person_ptr)) {
-		gtk_text_buffer_set_text(error_buffer,"Please enter a person",-1);
-		return;
-	} else if (!strlen(amount_ptr)) {
-		gtk_text_buffer_set_text(error_buffer,"Please enter a fee amount",-1);
+	if(validate_date(date_ptr) == FAILURE) {
 		return;
 	}
-
-	number = strtod(amount_ptr,&endptr);
-
-	if(endptr == amount_ptr) {
-		gtk_text_buffer_set_text(error_buffer,"Fee amount entered has an invalid format."
-				" Please enter ascii digits.  You can include a decimal.",-1);
+	if(validate_person(person_ptr) == FAILURE) {
 		return;
-	} else if (number >= HUGE_VAL || number <= -HUGE_VAL) {
-		gtk_text_buffer_set_text(error_buffer,"Fee amount entered has too many digits",-1);
-		return;
-	} else {
-		gtk_text_buffer_set_text(error_buffer," ",-1);
 	}
+	if(str_to_double(amount_ptr,&number) == FAILURE)
+		return;
 
 	gtk_list_store_insert_with_values(model, NULL, -1,
-					DATE_C, year_ptr,
+					DATE_C, date_ptr,
 					PERSON_C, person_ptr,
 					AMOUNT_C, number,
+					SHOW_C, 1, /* 1 for, yes show in tree */
 					-1);
+
+	
+	gtk_entry_set_text(GTK_ENTRY(date), "");
+	gtk_entry_set_text(GTK_ENTRY(person), "");
+	gtk_entry_set_text(GTK_ENTRY(amount), "");
 
 }
 
@@ -74,16 +130,16 @@ int main(int argc, char **argv)
 
 	/* Init variables */
 	GtkWidget *window, *grid, *scrolled_window, *add, *box, 
-	*year_label, *person_label, *amount_label, *add_label, *tree_view;
+	*date_label, *person_label, *amount_label, *add_label, *tree_view;
 	GtkListStore *model;
 	GtkTreeViewColumn *column;
+	GtkTreeModel *filter;
 
 	/* Init GTK */
 	gtk_init(&argc,&argv);
 	
 	/* Temp debug info */
 	printf("%d\n",LDBL_DIG);
-	memset(&entries,0,sizeof(struct entry) * MAX_ENTRIES);
 
 	/* Create vertically oriented box to pack program widgets into */
 	box = gtk_box_new(GTK_ORIENTATION_VERTICAL,20);
@@ -108,13 +164,33 @@ int main(int argc, char **argv)
 	gtk_widget_set_margin_end(grid,50);
 	gtk_widget_set_margin_bottom(grid,0);
 
-	/* Add year entry to value entry grid */
-	year_label = gtk_label_new("Year");
-	gtk_grid_attach(GTK_GRID(grid),year_label,0,0,1,1);
-	year = gtk_entry_new();
-	gtk_widget_set_margin_top(year,2);
-	gtk_grid_attach(GTK_GRID(grid),year,0,1,1,1);
-	gtk_widget_set_margin_end(year,10);
+	/* Add date entry to value entry grid */
+	date_label = gtk_label_new("Date (yy/mm/dd)");
+	gtk_grid_attach(GTK_GRID(grid),date_label,0,0,1,1);
+	date = gtk_entry_new();
+	gtk_widget_set_margin_top(date,2);
+	gtk_grid_attach(GTK_GRID(grid),date,0,1,1,1);
+	gtk_widget_set_margin_end(date,10);
+
+	/* Add month entry to value entry grid */
+	/*
+	month_label = gtk_label_new("Month");
+	gtk_grid_attach(GTK_GRID(grid),month_label,0,0,1,1);
+	month = gtk_entry_new();
+	gtk_widget_set_margin_top(month,2);
+	gtk_grid_attach(GTK_GRID(grid),month,0,1,1,1);
+	gtk_widget_set_margin_end(month,10);
+	*/
+
+	/* Add day entry to value entry grid */
+	/*
+	day_label = gtk_label_new("Day");
+	gtk_grid_attach(GTK_GRID(grid),day_label,0,0,1,1);
+	day = gtk_entry_new();
+	gtk_widget_set_margin_top(day,2);
+	gtk_grid_attach(GTK_GRID(grid),day,0,1,1,1);
+	gtk_widget_set_margin_end(day,10);
+	*/
 
 	/* Add person entry to value entry grid */
 	person_label = gtk_label_new("Person");
@@ -150,7 +226,8 @@ int main(int argc, char **argv)
 		TOTAL_COLUMNS,  /* required parameter, total columns */
 		G_TYPE_STRING,  /* Second column, Date, DATE_C */
 		G_TYPE_STRING,  /* Third column, Person, PERSON_C */
-		G_TYPE_DOUBLE  /* Fourth column, AMOUNT, AMOUNT_C */
+		G_TYPE_DOUBLE,  /* Fourth column, AMOUNT, AMOUNT_C */
+		G_TYPE_BOOLEAN  /* 1 for show, 0 for hide */
 		);
 
 	/* Test row */
@@ -162,10 +239,15 @@ int main(int argc, char **argv)
 		-1);
 	*/
 
-	/* Create tree view for table using model */
-	tree_view = gtk_tree_view_new_with_model(GTK_TREE_MODEL(model));
-	/* Unref model */
-	g_object_unref(model);
+	/* create filter (child model) from model */
+	filter = gtk_tree_model_filter_new(GTK_TREE_MODEL(model),NULL);
+	gtk_tree_model_filter_set_visible_column(GTK_TREE_MODEL_FILTER(filter),3);
+
+	/* Create tree view for table using child model */
+	tree_view = gtk_tree_view_new_with_model(GTK_TREE_MODEL(filter));
+
+	/* Unref child model */
+	g_object_unref(filter);
 
 	/* Add columns to tree view */
 	column = gtk_tree_view_column_new_with_attributes("Date",
