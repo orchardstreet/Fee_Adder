@@ -1,6 +1,7 @@
-/* TODO add buttons to right side: filter, search, edit, delete, hide, hide all, show all, save */
 /* TODO add to bottom, two total label to add total of all, including unhidden */
+/* TODO add buttons to right side: filter, search, edit, delete, hide, hide all, show all, save */
 /* TODO add buttons to button: save open */
+/* TODO less 0s https://docs.gtk.org/gtk3/treeview-tutorial.html#cell-data-functions */
 #include <stdlib.h>
 #include <stdio.h>
 #include <gtk/gtk.h>
@@ -18,6 +19,10 @@ enum columns {DATE_C, PERSON_C, AMOUNT_C, SHOW_C, TOTAL_COLUMNS};
 static GtkWidget *amount, *date, *person;
 static GtkTextBuffer *error_buffer;
 static GtkWidget *error_widget;
+static GtkWidget *scrolled_window;
+static GtkAdjustment *adj;
+static GtkWidget *window;
+unsigned char scroll = 0;
 
 /* I only need this if I can't just inactivate a row */
 /* don't need it */
@@ -38,6 +43,44 @@ struct entry entries[MAX_ENTRIES];
 
 void skip_whitespace(char **text_skip) {
 	for(;**text_skip == ' ';(*text_skip)++) {}; 
+}
+
+gboolean keypress_function(GtkWidget *widget, GdkEventKey *event, gpointer data)
+{
+	GtkWidget *scrollbar_ptr;
+	if (event->keyval == GDK_KEY_space){
+		printf("test!\n");
+		return TRUE;
+	}
+	return FALSE;
+}
+
+void scroll_to_end (GtkWidget *widget, GdkRectangle *allocate, gpointer user_data)
+{
+	if(scroll) {
+		/*
+		if (widget != NULL) { }
+		if (allocate != NULL) { }
+
+		adj = gtk_scrolled_window_get_vadjustment (GTK_SCROLLED_WINDOW (scrolled_window));
+		adj2 = adj;
+		gtk_adjustment_set_value (adj, gtk_adjustment_get_upper (adj));
+		*/
+		//gtk_scrolled_window_set_vadjustment(GTK_SCROLLED_WINDOW(scrolled_window),adj2);
+		
+
+    while(gtk_events_pending()) {
+	    gtk_main_iteration();
+    }
+	gtk_widget_show_all(window);
+		GtkAdjustment *adjustment = gtk_scrolled_window_get_vadjustment (
+        GTK_SCROLLED_WINDOW (scrolled_window));
+    double upper = gtk_adjustment_get_upper (adjustment);
+    double page_size = gtk_adjustment_get_page_size (adjustment);
+   // gtk_adjustment_set_value (adjustment, upper - page_size);
+    gtk_adjustment_set_value (adjustment, upper - page_size - 0);
+	}
+	scroll = 0;
 }
 
 unsigned char str_to_double(char *str, double *number)
@@ -121,6 +164,7 @@ void do_add(GtkWidget *widget, gpointer model)
 	if(str_to_double(amount_ptr,&number) == FAILURE)
 		return;
 
+	scroll = 1;
 	gtk_list_store_insert_with_values(model, NULL, -1,
 					DATE_C, date_ptr,
 					PERSON_C, person_ptr,
@@ -139,7 +183,7 @@ int main(int argc, char **argv)
 {
 
 	/* Init variables */
-	GtkWidget *window, *grid, *scrolled_window, *add, *box, 
+	GtkWidget *grid, *add, *box, 
 	*date_label, *person_label, *amount_label, *add_label, *tree_view;
 	GtkListStore *model;
 	GtkTreeViewColumn *column;
@@ -149,7 +193,7 @@ int main(int argc, char **argv)
 	gtk_init(&argc,&argv);
 	
 	/* Temp debug info */
-	printf("%d\n",LDBL_DIG);
+	printf("Double has a precision of %d digits\n",LDBL_DIG);
 
 	/* Create vertically oriented box to pack program widgets into */
 	box = gtk_box_new(GTK_ORIENTATION_VERTICAL,20);
@@ -158,6 +202,9 @@ int main(int argc, char **argv)
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title (GTK_WINDOW(window) , "Fee Adder" );
 	gtk_container_set_border_width (GTK_CONTAINER(window),10); gtk_window_set_default_size (GTK_WINDOW (window), 300, 500);
+	gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
+	g_signal_connect (G_OBJECT (window), "key_press_event",
+        G_CALLBACK (keypress_function), NULL);
 
 	/* Destroy window on close */
 	g_signal_connect(window,"destroy",G_CALLBACK(gtk_main_quit),NULL);
@@ -218,6 +265,12 @@ int main(int argc, char **argv)
 	gtk_grid_attach(GTK_GRID(grid),amount,2,1,1,1);
 	gtk_widget_set_margin_end(amount,10);
 
+	/* Add 'add' button to value entry grid */
+	add_label = gtk_label_new("");
+	gtk_grid_attach(GTK_GRID(grid),add_label,3,0,1,1);
+	add = gtk_button_new_with_label("Add");
+	gtk_grid_attach(GTK_GRID(grid), add, 3, 1, 1, 1);
+
 	/* Create a scrollable window */
 	scrolled_window = gtk_scrolled_window_new(NULL, NULL);
 	/* Create margin for scrollable window */
@@ -226,12 +279,15 @@ int main(int argc, char **argv)
 	gtk_widget_set_margin_end(scrolled_window,50);
 	gtk_widget_set_margin_bottom(scrolled_window,0);
 	/* Always include a vertical scroll cursor on scroll window */
-	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window),
-                                    GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
+ 	gtk_widget_set_size_request (scrolled_window, 50, 50);
+	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window), GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
 	/* Add scrollable window to box */
 	gtk_box_pack_start (GTK_BOX (box), scrolled_window, TRUE, TRUE, 0);
+	//g_object_set (scrolled_window, "vexpand", TRUE, NULL);
+        //g_object_set (scrolled_window, "margin", 10, NULL);
+    	gtk_widget_show (scrolled_window);
 
-	/* Create model for table */
+	/* Create liststore for table */
 	model = gtk_list_store_new(
 		TOTAL_COLUMNS,  /* required parameter, total columns */
 		G_TYPE_STRING,  /* Second column, Date, DATE_C */
@@ -249,41 +305,41 @@ int main(int argc, char **argv)
 		-1);
 	*/
 
-	/* create filter (child model) from model */
+	/* create treestore as filter of liststore */
 	filter = gtk_tree_model_filter_new(GTK_TREE_MODEL(model),NULL);
 	gtk_tree_model_filter_set_visible_column(GTK_TREE_MODEL_FILTER(filter),3);
 
-	/* Create tree view for table using child model */
+	/* Create treeview from treestore */
 	tree_view = gtk_tree_view_new_with_model(GTK_TREE_MODEL(filter));
 
-	/* Unref child model */
+	/* Scroll the scrollable window to bottom when the size of treeview changes
+	 * Default behaviour is to hide new rows for some reason */
+	g_signal_connect (tree_view, "size-allocate", G_CALLBACK (scroll_to_end), NULL);
+
+	/* Unref treestore */
 	g_object_unref(filter);
 
-	/* Add columns to tree view */
+	/* Add columns to treeview */
+	/* Treeview column 0 */
 	column = gtk_tree_view_column_new_with_attributes("Date",
 		gtk_cell_renderer_spin_new(),
 		"text", DATE_C,
 		NULL);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
 
+	/* Treeview column 1 */
 	column = gtk_tree_view_column_new_with_attributes("Person",
 		gtk_cell_renderer_text_new(),
 		"text", PERSON_C,
 		NULL);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
 
+	/* Treeview column 2 */
 	column = gtk_tree_view_column_new_with_attributes("Amount",
 		gtk_cell_renderer_text_new(),
 		"text", AMOUNT_C,
 		NULL);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
-
-
-	/* Add 'add' button to value entry grid */
-	add_label = gtk_label_new("");
-	gtk_grid_attach(GTK_GRID(grid),add_label,3,0,1,1);
-	add = gtk_button_new_with_label("Add");
-	gtk_grid_attach(GTK_GRID(grid), add, 3, 1, 1, 1);
 
 	/* error widget */
 	error_buffer = gtk_text_buffer_new(NULL);
@@ -296,8 +352,9 @@ int main(int argc, char **argv)
 
 	/* Add tree view to scrolled window */
 	gtk_container_add(GTK_CONTAINER(scrolled_window),tree_view);	
-	gtk_widget_set_hexpand(scrolled_window, TRUE);
-	gtk_widget_set_vexpand(scrolled_window, TRUE);
+	//gtk_widget_set_hexpand(scrolled_window, TRUE);
+	//gtk_widget_set_vexpand(scrolled_window, TRUE);
+	
 	/* Add box to window */
 	gtk_container_add(GTK_CONTAINER(window),box);
 
