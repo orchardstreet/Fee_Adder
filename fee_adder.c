@@ -216,6 +216,7 @@ int main(int argc, char **argv)
 	/* Add date entry to value entry grid */
 	date_label = gtk_label_new("Date (yy/mm/dd)");
 	gtk_grid_attach(GTK_GRID(grid),date_label,0,0,1,1);
+	gtk_widget_set_margin_end(date_label,10);
 	date = gtk_entry_new();
 	gtk_widget_set_margin_top(date,2);
 	gtk_grid_attach(GTK_GRID(grid),date,0,1,1,1);
@@ -244,6 +245,7 @@ int main(int argc, char **argv)
 	/* Add person entry to value entry grid */
 	person_label = gtk_label_new("Person");
 	gtk_grid_attach(GTK_GRID(grid),person_label,1,0,1,1);
+	gtk_widget_set_margin_end(person_label,10);
 	person = gtk_entry_new();
 	gtk_widget_set_margin_top(person,2);
 	gtk_grid_attach(GTK_GRID(grid),person,1,1,1,1);
@@ -252,6 +254,7 @@ int main(int argc, char **argv)
 	/* Add amount entry to value entry grid */
 	amount_label = gtk_label_new("Amount");
 	gtk_grid_attach(GTK_GRID(grid),amount_label,2,0,1,1);
+	gtk_widget_set_margin_end(amount_label,10);
 	amount = gtk_entry_new();
 	gtk_widget_set_margin_top(amount,2);
 	gtk_grid_attach(GTK_GRID(grid),amount,2,1,1,1);
