@@ -180,6 +180,8 @@ int main(int argc, char **argv)
 	gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
 	g_signal_connect (G_OBJECT (window), "key_press_event",
         G_CALLBACK (keypress_function), NULL);
+	gtk_window_set_default_size ( GTK_WINDOW(window), 700, 480);
+
 
 	/* Destroy window on close */
 	g_signal_connect(window,"destroy",G_CALLBACK(gtk_main_quit),NULL);
@@ -188,7 +190,7 @@ int main(int argc, char **argv)
 	grid = gtk_grid_new();
 
 	/* Add grid to box */
-	gtk_box_pack_start (GTK_BOX (box), grid, 0, 0, 0);
+	gtk_box_pack_start (GTK_BOX (box), grid, FALSE, TRUE, 0);
 
 	/* Add margin to value entry grid */
 	gtk_widget_set_margin_top(grid,15);
@@ -248,6 +250,7 @@ int main(int argc, char **argv)
 	gtk_grid_attach(GTK_GRID(grid),add_label,3,0,1,1);
 	add = gtk_button_new_with_label("Add");
 	gtk_grid_attach(GTK_GRID(grid), add, 3, 1, 1, 1);
+         gtk_widget_set_halign (grid, GTK_ALIGN_CENTER);
 
 	/* Create a scrollable window */
 	scrolled_window = gtk_scrolled_window_new(NULL, NULL);
@@ -257,11 +260,19 @@ int main(int argc, char **argv)
 	gtk_widget_set_margin_end(scrolled_window,50);
 	gtk_widget_set_margin_bottom(scrolled_window,0);
 	/* Always include a vertical scroll cursor on scroll window */
- 	gtk_widget_set_size_request (scrolled_window, 50, 50);
+ 	gtk_widget_set_size_request (scrolled_window, 600, 100);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window), GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
 	/* Add scrollable window to box */
 	gtk_box_pack_start (GTK_BOX (box), scrolled_window, TRUE, TRUE, 0);
-	//g_object_set (scrolled_window, "vexpand", TRUE, NULL);
+         gtk_widget_set_halign (scrolled_window, GTK_ALIGN_CENTER);
+         //gtk_widget_set_valign (scrolled_window, GTK_ALIGN_START);
+	//gtk_grid_attach(GTK_GRID(grid),scrolled_window,0,4,4,4);
+	//gtk_widget_set_hexpand(scrolled_window, TRUE);
+	//gtk_widget_set_vexpand(scrolled_window, TRUE);
+	 //gtk_widget_set_hexpand (scrolled_window, TRUE);
+	
+	g_object_set (scrolled_window, "vexpand", TRUE, NULL);
+	g_object_set (scrolled_window, "hexpand", FALSE, NULL);
         //g_object_set (scrolled_window, "margin", 10, NULL);
     	gtk_widget_show (scrolled_window);
 
@@ -274,7 +285,7 @@ int main(int argc, char **argv)
 		G_TYPE_BOOLEAN  /* 1 for show, 0 for hide */
 		);
 
-	/* Test row */
+	/* Example rows, if any */
 	/*
 	gtk_list_store_insert_with_values(model, NULL, -1,
 		DATE_C, "Date",
@@ -330,8 +341,6 @@ int main(int argc, char **argv)
 
 	/* Add tree view to scrolled window */
 	gtk_container_add(GTK_CONTAINER(scrolled_window),tree_view);	
-	//gtk_widget_set_hexpand(scrolled_window, TRUE);
-	//gtk_widget_set_vexpand(scrolled_window, TRUE);
 	
 	/* Add box to window */
 	gtk_container_add(GTK_CONTAINER(window),box);
