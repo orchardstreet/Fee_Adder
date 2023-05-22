@@ -60,7 +60,7 @@ unsigned char str_to_double(char *str, double *number)
 		gtk_text_buffer_set_text(error_buffer,"Fee amount entered has too many digits",-1);
 		return FAILURE;
 	} else if (*number <= -7777777777.55 || *number >= 7777777777.55) {
-		gtk_text_buffer_set_text(error_buffer,"Fee amount out of range, should be betweeen"
+		gtk_text_buffer_set_text(error_buffer,"Fee amount out of range, should be between"
 				" -7777777777.55 and 7777777777.55",-1);
 		return FAILURE;
 
