@@ -58,27 +58,15 @@ gboolean keypress_function(GtkWidget *widget, GdkEventKey *event, gpointer data)
 void scroll_to_end (GtkWidget *widget, GdkRectangle *allocate, gpointer user_data)
 {
 	if(scroll) {
-		/*
-		if (widget != NULL) { }
-		if (allocate != NULL) { }
-
-		adj = gtk_scrolled_window_get_vadjustment (GTK_SCROLLED_WINDOW (scrolled_window));
-		adj2 = adj;
-		gtk_adjustment_set_value (adj, gtk_adjustment_get_upper (adj));
-		*/
-		//gtk_scrolled_window_set_vadjustment(GTK_SCROLLED_WINDOW(scrolled_window),adj2);
-		
-
-    while(gtk_events_pending()) {
-	    gtk_main_iteration();
-    }
-	gtk_widget_show_all(window);
-		GtkAdjustment *adjustment = gtk_scrolled_window_get_vadjustment (
-        GTK_SCROLLED_WINDOW (scrolled_window));
-    double upper = gtk_adjustment_get_upper (adjustment);
-    double page_size = gtk_adjustment_get_page_size (adjustment);
-   // gtk_adjustment_set_value (adjustment, upper - page_size);
-    gtk_adjustment_set_value (adjustment, upper - page_size - 0);
+		while(gtk_events_pending()) {
+		    gtk_main_iteration();
+		}
+		gtk_widget_show_all(window);
+			GtkAdjustment *adjustment = gtk_scrolled_window_get_vadjustment (
+		GTK_SCROLLED_WINDOW (scrolled_window));
+		double upper = gtk_adjustment_get_upper (adjustment);
+		double page_size = gtk_adjustment_get_page_size (adjustment);
+		gtk_adjustment_set_value (adjustment, upper - page_size - 0);
 	}
 	scroll = 0;
 }
@@ -149,8 +137,12 @@ void do_add(GtkWidget *widget, gpointer model)
 {
 
 	double number;
-	/* These data at these pointers can't be modified */
-	/* ideally we should copy this into a global array */
+	/* The data at these pointers can't be modified */
+	/* ideally we should copy this into a local array
+	 * Check to see if it is not undefined behaviour to
+	 * pass a local char array to gtk_list_stre_insert_with_value
+	 * and if not, then do that, because it's safer and can cut off
+	 * trailing whitespace etc */
 	char *date_ptr = (char *)gtk_entry_get_text(GTK_ENTRY(date));
 	char *person_ptr = (char *)gtk_entry_get_text(GTK_ENTRY(person));
 	char *amount_ptr = (char *)gtk_entry_get_text(GTK_ENTRY(amount));
@@ -313,7 +305,7 @@ int main(int argc, char **argv)
 	tree_view = gtk_tree_view_new_with_model(GTK_TREE_MODEL(filter));
 
 	/* Scroll the scrollable window to bottom when the size of treeview changes
-	 * Default behaviour is to hide new rows for some reason */
+	 * Default behaviour is to hide new rows at bottom for some reason */
 	g_signal_connect (tree_view, "size-allocate", G_CALLBACK (scroll_to_end), NULL);
 
 	/* Unref treestore */
