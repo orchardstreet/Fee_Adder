@@ -24,23 +24,6 @@ static GtkAdjustment *adj;
 static GtkWidget *window;
 unsigned char scroll = 0;
 
-/* I only need this if I can't just inactivate a row */
-/* don't need it */
-/* if uncommenting remember to memset to 0 */
-/*
-struct entry {
-	char date_string[MAX_DATE_CHARS];
-	char person_string[MAX_PERSON_CHARS];
-	double amount_float;
-	char amount_string[MAX_INDIVIDUAL_FEE_NUMBER_CHARS];
-	unsigned char year;
-	unsigned char day;
-	unsigned char month;
-};
-
-struct entry entries[MAX_ENTRIES];
-*/
-
 void skip_whitespace(char **text_skip) {
 	for(;**text_skip == ' ';(*text_skip)++) {}; 
 }
