@@ -1,3 +1,6 @@
+/* TODO add buttons to right side: filter, search, edit, delete, hide, hide all, show all, save */
+/* TODO add to bottom, two total label to add total of all, including unhidden */
+/* TODO add buttons to button: save open */
 #include <stdlib.h>
 #include <stdio.h>
 #include <gtk/gtk.h>
@@ -56,6 +59,11 @@ unsigned char str_to_double(char *str, double *number)
 	} else if (*number >= HUGE_VAL || *number <= -HUGE_VAL) {
 		gtk_text_buffer_set_text(error_buffer,"Fee amount entered has too many digits",-1);
 		return FAILURE;
+	} else if (*number <= 7777777777.55 || *number >= 7777777777.55) {
+		gtk_text_buffer_set_text(error_buffer,"Fee amount out of range, should be betweeen"
+				" -7777777777.55 and 7777777777.55",-1);
+		return FAILURE;
+
 	} else if (*endptr != '\0') {
 		skip_whitespace(&endptr);
 		if(*endptr != '\0') {
@@ -79,6 +87,7 @@ unsigned char validate_person(char *text)
 		gtk_text_buffer_set_text(error_buffer,"Name of person is too long, recompile to allow longer person names",-1);
 		return FAILURE;
 	}
+	return SUCCESS;
 }
 
 unsigned char validate_date (char *text)
@@ -90,6 +99,7 @@ unsigned char validate_date (char *text)
 		gtk_text_buffer_set_text(error_buffer,"Date is too long, must be in yy/mm/dd format",-1);
 		return FAILURE;
 	}
+	return SUCCESS;
 }
 
 void do_add(GtkWidget *widget, gpointer model)
@@ -118,7 +128,7 @@ void do_add(GtkWidget *widget, gpointer model)
 					SHOW_C, 1, /* 1 for, yes show in tree */
 					-1);
 
-	
+	gtk_text_buffer_set_text(error_buffer," ",-1);
 	gtk_entry_set_text(GTK_ENTRY(date), "");
 	gtk_entry_set_text(GTK_ENTRY(person), "");
 	gtk_entry_set_text(GTK_ENTRY(amount), "");
