@@ -1,6 +1,6 @@
 /* TODO add payment method column */
 /* TODO add to bottom, two total label to add total of all, including unhidden */
-/* TODO add buttons to button: save open */
+/* TODO add 'save', 'open' buttons */
 /* TODO less 0s https://docs.gtk.org/gtk3/treeview-tutorial.html#cell-data-functions */
 #include <stdlib.h>
 #include <stdio.h>
@@ -14,8 +14,11 @@
 #define MAX_PERSON_CHARS 100 /* adjustable */
 #define MAX_INDIVIDUAL_FEE_NUMBER_CHARS 21
 
+/* enums */
 enum exit_codes {SUCCESS,FAILURE};
 enum columns {DATE_C, PERSON_C, AMOUNT_C, SHOW_C, TOTAL_COLUMNS};
+
+/* Init global variables */
 GtkWidget *amount, *date, *person;
 GtkTextBuffer *error_buffer;
 GtkWidget *error_widget;
@@ -24,6 +27,7 @@ GtkAdjustment *adj;
 GtkWidget *window;
 unsigned char scroll = 0;
 
+/* Functions */
 void skip_whitespace(char **text_skip) {
 	for(;**text_skip == ' ';(*text_skip)++) {}; 
 }
@@ -156,10 +160,11 @@ void do_add(GtkWidget *widget, gpointer model)
 
 }
 
+/* Main */
 int main(int argc, char **argv)
 {
 
-	/* Init variables */
+	/* Init local variables */
 	GtkWidget *grid, *grid2, *add, *box, *box2, 
 	 *date_label, *person_label, *amount_label, *add_label, *tree_view;
 	GtkWidget *filter_button, *search_button, *edit_button, *add_button, 
@@ -193,15 +198,10 @@ int main(int argc, char **argv)
 	grid = gtk_grid_new();
 	gtk_grid_set_row_spacing (GTK_GRID(grid),2);
 	gtk_grid_set_column_spacing (GTK_GRID(grid),10);
-
 	/* Add grid to vertical box */
 	gtk_box_pack_start (GTK_BOX (box), grid, FALSE, TRUE, 0);
-
 	/* Add margin to value entry grid */
 	gtk_widget_set_margin_top(grid,15);
-	//gtk_widget_set_margin_start(grid,50);
-	//gtk_widget_set_margin_end(grid,50);
-	gtk_widget_set_margin_bottom(grid,0);
 
 	/* Add date entry to value entry grid */
 	date_label = gtk_label_new("Date (dd/mm/yy)");
@@ -209,22 +209,6 @@ int main(int argc, char **argv)
 	date = gtk_entry_new();
 	gtk_grid_attach(GTK_GRID(grid),date,0,1,1,1);
 	gtk_entry_set_width_chars (GTK_ENTRY(date), 8);
-
-	/* Add month entry to value entry grid */
-	/*
-	month_label = gtk_label_new("Month");
-	gtk_grid_attach(GTK_GRID(grid),month_label,0,0,1,1);
-	month = gtk_entry_new();
-	gtk_grid_attach(GTK_GRID(grid),month,0,1,1,1);
-	*/
-
-	/* Add day entry to value entry grid */
-	/*
-	day_label = gtk_label_new("Day");
-	gtk_grid_attach(GTK_GRID(grid),day_label,0,0,1,1);
-	day = gtk_entry_new();
-	gtk_grid_attach(GTK_GRID(grid),day,0,1,1,1);
-	*/
 
 	/* Add person entry to value entry grid */
 	person_label = gtk_label_new("Person");
@@ -246,13 +230,14 @@ int main(int argc, char **argv)
 	add = gtk_button_new_with_label("Add");
 	gtk_grid_attach(GTK_GRID(grid), add, 3, 1, 1, 1);
 
-	/* Center grid */
+	/* Center value entry grid */
         gtk_widget_set_halign (grid, GTK_ALIGN_CENTER);
 
 	/* Create horizontally oriented box to horizontally pack progam widgets into */
 	box2 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL,70);
 	/* Pack horizontal box into vertical box */
 	gtk_box_pack_start (GTK_BOX (box), box2, FALSE, TRUE, 0);
+	/* Align horizontal box */
         gtk_widget_set_halign (box2, GTK_ALIGN_CENTER);
 
 	/* Create a scrollable window */
@@ -283,8 +268,8 @@ int main(int argc, char **argv)
 	/* Example rows, if any */
 	/*
 	gtk_list_store_insert_with_values(model, NULL, -1,
-		DATE_C, "Date",
-		PERSON_C, "Person",
+		DATE_C, "03/22/23",
+		PERSON_C, "Natalie Smith",
 		AMOUNT_C, 100.20,
 		-1);
 	*/
