@@ -185,7 +185,8 @@ int main(int argc, char **argv)
 	/* Create window, set title, border width, and size */
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title (GTK_WINDOW(window) , "Fee Adder" );
-	gtk_container_set_border_width (GTK_CONTAINER(window),10); gtk_window_set_default_size (GTK_WINDOW (window), 300, 500);
+	gtk_container_set_border_width (GTK_CONTAINER(window),10); 
+	gtk_window_set_default_size (GTK_WINDOW (window), 300, 500);
 	gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
 	g_signal_connect (G_OBJECT (window), "key_press_event",
         G_CALLBACK (keypress_function), NULL);
