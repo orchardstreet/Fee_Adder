@@ -23,9 +23,8 @@ GtkWidget *amount_entry, *date_entry, *person_entry;
 GtkTextBuffer *error_buffer;
 GtkWidget *error_widget;
 GtkWidget *scrolled_window;
-GtkAdjustment *adj;
 GtkWidget *window;
-unsigned char scroll = 0;
+unsigned char scrolling_to_end = 0;
 
 /* Functions */
 void skip_whitespace(char **text_skip) {
@@ -34,7 +33,6 @@ void skip_whitespace(char **text_skip) {
 
 gboolean keypress_function(GtkWidget *widget, GdkEventKey *event, gpointer data)
 {
-	GtkWidget *scrollbar_ptr;
 	/*
 	if (event->keyval == GDK_KEY_space){
 		printf("test!\n");
@@ -46,7 +44,7 @@ gboolean keypress_function(GtkWidget *widget, GdkEventKey *event, gpointer data)
 
 void scroll_to_end (GtkWidget *widget, GdkRectangle *allocate, gpointer user_data)
 {
-	if(scroll) {
+	if(scrolling_to_end) {
 		while(gtk_events_pending()) {
 		    gtk_main_iteration();
 		}
@@ -57,7 +55,7 @@ void scroll_to_end (GtkWidget *widget, GdkRectangle *allocate, gpointer user_dat
 		double page_size = gtk_adjustment_get_page_size (adjustment);
 		gtk_adjustment_set_value (adjustment, upper - page_size - 0);
 	}
-	scroll = 0;
+	scrolling_to_end = 0;
 }
 
 unsigned char str_to_double(char *str, double *number)
@@ -145,7 +143,7 @@ void do_add(GtkWidget *widget, gpointer model)
 	if(str_to_double(amount_ptr,&number) == FAILURE)
 		return;
 
-	scroll = 1;
+	scrolling_to_end = 1;
 	gtk_list_store_insert_with_values(model, NULL, -1,
 					DATE_C, date_ptr,
 					PERSON_C, person_ptr,
