@@ -19,7 +19,7 @@ enum exit_codes {SUCCESS,FAILURE};
 enum columns {DATE_C, PERSON_C, AMOUNT_C, SHOW_C, TOTAL_COLUMNS};
 
 /* Init global variables */
-GtkWidget *amount, *date, *person;
+GtkWidget *amount_entry, *date_entry, *person_entry;
 GtkTextBuffer *error_buffer;
 GtkWidget *error_widget;
 GtkWidget *scrolled_window;
@@ -132,9 +132,9 @@ void do_add(GtkWidget *widget, gpointer model)
 	 * pass a local char array to gtk_list_stre_insert_with_value
 	 * and if not, then do that, because it's safer and can cut off
 	 * trailing whitespace etc */
-	char *date_ptr = (char *)gtk_entry_get_text(GTK_ENTRY(date));
-	char *person_ptr = (char *)gtk_entry_get_text(GTK_ENTRY(person));
-	char *amount_ptr = (char *)gtk_entry_get_text(GTK_ENTRY(amount));
+	char *date_ptr = (char *)gtk_entry_get_text(GTK_ENTRY(date_entry));
+	char *person_ptr = (char *)gtk_entry_get_text(GTK_ENTRY(person_entry));
+	char *amount_ptr = (char *)gtk_entry_get_text(GTK_ENTRY(amount_entry));
 
 	if(validate_date(date_ptr) == FAILURE) {
 		return;
@@ -154,9 +154,9 @@ void do_add(GtkWidget *widget, gpointer model)
 					-1);
 
 	gtk_text_buffer_set_text(error_buffer," ",-1);
-	gtk_entry_set_text(GTK_ENTRY(date), "");
-	gtk_entry_set_text(GTK_ENTRY(person), "");
-	gtk_entry_set_text(GTK_ENTRY(amount), "");
+	gtk_entry_set_text(GTK_ENTRY(date_entry), "");
+	gtk_entry_set_text(GTK_ENTRY(person_entry), "");
+	gtk_entry_set_text(GTK_ENTRY(amount_entry), "");
 
 }
 
@@ -165,8 +165,8 @@ int main(int argc, char **argv)
 {
 
 	/* Init local variables */
-	GtkWidget *grid, *grid2, *add, *box, *box2, 
-	 *date_label, *person_label, *amount_label, *add_label, *tree_view;
+	GtkWidget *grid, *grid2, *box, *box2, *date_label, *person_label, 
+		  *amount_label, *add_label, *tree_view;
 	GtkWidget *filter_button, *search_button, *edit_button, *add_button, 
 		*hide_button, *delete_button, *hide_all_button, *show_all_button, *save_button;
 	GtkListStore *model;
@@ -178,6 +178,7 @@ int main(int argc, char **argv)
 	
 	/* Temp debug info */
 	printf("Double has a precision of %d digits\n",LDBL_DIG);
+	printf("Columns: %d\n",TOTAL_COLUMNS);
 
 	/* Create vertically oriented box to pack program widgets into */
 	box = gtk_box_new(GTK_ORIENTATION_VERTICAL,20);
@@ -207,29 +208,29 @@ int main(int argc, char **argv)
 	/* Add date entry to value entry grid */
 	date_label = gtk_label_new("Date (dd/mm/yy)");
 	gtk_grid_attach(GTK_GRID(grid),date_label,0,0,1,1);
-	date = gtk_entry_new();
-	gtk_grid_attach(GTK_GRID(grid),date,0,1,1,1);
-	gtk_entry_set_width_chars (GTK_ENTRY(date), 8);
+	date_entry = gtk_entry_new();
+	gtk_grid_attach(GTK_GRID(grid),date_entry,0,1,1,1);
+	gtk_entry_set_width_chars (GTK_ENTRY(date_entry), 8);
 
 	/* Add person entry to value entry grid */
 	person_label = gtk_label_new("Person");
 	gtk_grid_attach(GTK_GRID(grid),person_label,1,0,1,1);
-	person = gtk_entry_new();
-	gtk_grid_attach(GTK_GRID(grid),person,1,1,1,1);
-	gtk_entry_set_width_chars (GTK_ENTRY(person), 20);
+	person_entry = gtk_entry_new();
+	gtk_grid_attach(GTK_GRID(grid),person_entry,1,1,1,1);
+	gtk_entry_set_width_chars (GTK_ENTRY(person_entry), 20);
 
 	/* Add amount entry to value entry grid */
 	amount_label = gtk_label_new("Amount");
 	gtk_grid_attach(GTK_GRID(grid),amount_label,2,0,1,1);
-	amount = gtk_entry_new();
-	gtk_grid_attach(GTK_GRID(grid),amount,2,1,1,1);
-	gtk_entry_set_width_chars (GTK_ENTRY(amount), 10);
+	amount_entry = gtk_entry_new();
+	gtk_grid_attach(GTK_GRID(grid),amount_entry,2,1,1,1);
+	gtk_entry_set_width_chars (GTK_ENTRY(amount_entry), 10);
 
 	/* Add 'add' button to value entry grid */
 	add_label = gtk_label_new("");
 	gtk_grid_attach(GTK_GRID(grid),add_label,3,0,1,1);
-	add = gtk_button_new_with_label("Add");
-	gtk_grid_attach(GTK_GRID(grid), add, 3, 1, 1, 1);
+	add_button = gtk_button_new_with_label("Add");
+	gtk_grid_attach(GTK_GRID(grid), add_button, 3, 1, 1, 1);
 
 	/* Center value entry grid */
         gtk_widget_set_halign (grid, GTK_ALIGN_CENTER);
@@ -361,7 +362,7 @@ int main(int argc, char **argv)
 	gtk_box_pack_start (GTK_BOX (box), error_widget, 0, 0, 0);
 
 	/* After clicking add, call 'do_add' function */
-	g_signal_connect(add,"clicked",G_CALLBACK(do_add),model);
+	g_signal_connect(add_button,"clicked",G_CALLBACK(do_add),model);
 
 	/* Add tree view to scrolled window */
 	gtk_container_add(GTK_CONTAINER(scrolled_window),tree_view);	
