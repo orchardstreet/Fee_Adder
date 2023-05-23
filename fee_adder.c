@@ -16,12 +16,12 @@
 
 enum exit_codes {SUCCESS,FAILURE};
 enum columns {DATE_C, PERSON_C, AMOUNT_C, SHOW_C, TOTAL_COLUMNS};
-static GtkWidget *amount, *date, *person;
-static GtkTextBuffer *error_buffer;
-static GtkWidget *error_widget;
-static GtkWidget *scrolled_window;
-static GtkAdjustment *adj;
-static GtkWidget *window;
+GtkWidget *amount, *date, *person;
+GtkTextBuffer *error_buffer;
+GtkWidget *error_widget;
+GtkWidget *scrolled_window;
+GtkAdjustment *adj;
+GtkWidget *window;
 unsigned char scroll = 0;
 
 void skip_whitespace(char **text_skip) {
@@ -208,6 +208,8 @@ int main(int argc, char **argv)
 	gtk_grid_attach(GTK_GRID(grid),date_label,0,0,1,1);
 	date = gtk_entry_new();
 	gtk_grid_attach(GTK_GRID(grid),date,0,1,1,1);
+	gtk_entry_set_width_chars (GTK_ENTRY(date), 8);
+
 	/* Add month entry to value entry grid */
 	/*
 	month_label = gtk_label_new("Month");
@@ -215,7 +217,6 @@ int main(int argc, char **argv)
 	month = gtk_entry_new();
 	gtk_grid_attach(GTK_GRID(grid),month,0,1,1,1);
 	*/
-	gtk_entry_set_width_chars (GTK_ENTRY(date), 8);
 
 	/* Add day entry to value entry grid */
 	/*
@@ -246,7 +247,7 @@ int main(int argc, char **argv)
 	gtk_grid_attach(GTK_GRID(grid), add, 3, 1, 1, 1);
 
 	/* Center grid */
-         gtk_widget_set_halign (grid, GTK_ALIGN_CENTER);
+        gtk_widget_set_halign (grid, GTK_ALIGN_CENTER);
 
 	/* Create horizontally oriented box to horizontally pack progam widgets into */
 	box2 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL,70);
@@ -256,21 +257,17 @@ int main(int argc, char **argv)
 
 	/* Create a scrollable window */
 	scrolled_window = gtk_scrolled_window_new(NULL, NULL);
-	/* Create margin for scrollable window */
-	//gtk_widget_set_margin_top(scrolled_window,0);
-	//gtk_widget_set_margin_start(scrolled_window,50);
-	//gtk_widget_set_margin_end(scrolled_window,0);
-	//gtk_widget_set_margin_bottom(scrolled_window,0);
-	/* Always include a vertical scroll cursor on scroll window */
+	/* Set preferred size of scrollable window */
  	gtk_widget_set_size_request (scrolled_window, 340, 100);
+	/* Always include a vertical scroll cursor on scroll window */
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window), GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
 	/* Add scrollable window to horizontal box */
 	gtk_box_pack_start (GTK_BOX (box2), scrolled_window, TRUE, TRUE, 0);
 	/* Align scrollable window */
         gtk_widget_set_halign (scrolled_window, GTK_ALIGN_START);
-        //gtk_widget_set_valign (scrolled_window, GTK_ALIGN_START);
 	g_object_set (scrolled_window, "vexpand", TRUE, NULL);
 	g_object_set (scrolled_window, "hexpand", FALSE, NULL);
+        //gtk_widget_set_valign (scrolled_window, GTK_ALIGN_START);
         //g_object_set (scrolled_window, "margin", 10, NULL);
     	gtk_widget_show (scrolled_window);
 
