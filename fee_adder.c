@@ -1,5 +1,5 @@
+/* TODO add payment method column */
 /* TODO add to bottom, two total label to add total of all, including unhidden */
-/* TODO add buttons to right side: filter, search, edit, delete, hide, hide all, show all, save */
 /* TODO add buttons to button: save open */
 /* TODO less 0s https://docs.gtk.org/gtk3/treeview-tutorial.html#cell-data-functions */
 #include <stdlib.h>
@@ -31,10 +31,12 @@ void skip_whitespace(char **text_skip) {
 gboolean keypress_function(GtkWidget *widget, GdkEventKey *event, gpointer data)
 {
 	GtkWidget *scrollbar_ptr;
+	/*
 	if (event->keyval == GDK_KEY_space){
 		printf("test!\n");
 		return TRUE;
 	}
+	*/
 	return FALSE;
 }
 
@@ -110,7 +112,7 @@ unsigned char validate_date (char *text)
 		gtk_text_buffer_set_text(error_buffer,"Please enter a date",-1);
 		return FAILURE;
 	} else if(strlen(text) > MAX_DATE_CHARS - 1)  {
-		gtk_text_buffer_set_text(error_buffer,"Date is too long, must be in yy/mm/dd format",-1);
+		gtk_text_buffer_set_text(error_buffer,"Date is too long, must be in dd/mm/yy format",-1);
 		return FAILURE;
 	}
 	return SUCCESS;
@@ -158,8 +160,10 @@ int main(int argc, char **argv)
 {
 
 	/* Init variables */
-	GtkWidget *grid, *add, *box, 
-	*date_label, *person_label, *amount_label, *add_label, *tree_view;
+	GtkWidget *grid, *grid2, *add, *box, *box2, 
+	 *date_label, *person_label, *amount_label, *add_label, *tree_view;
+	GtkWidget *filter_button, *search_button, *edit_button, *add_button, 
+		*hide_button, *delete_button, *hide_all_button, *show_all_button, *save_button;
 	GtkListStore *model;
 	GtkTreeViewColumn *column;
 	GtkTreeModel *filter;
@@ -182,31 +186,31 @@ int main(int argc, char **argv)
         G_CALLBACK (keypress_function), NULL);
 	gtk_window_set_default_size ( GTK_WINDOW(window), 700, 480);
 
-
 	/* Destroy window on close */
 	g_signal_connect(window,"destroy",G_CALLBACK(gtk_main_quit),NULL);
 
 	/* Create grid for value entry */
 	grid = gtk_grid_new();
+	gtk_grid_set_row_spacing (GTK_GRID(grid),2);
+	gtk_grid_set_column_spacing (GTK_GRID(grid),10);
 
-	/* Add grid to box */
+	/* Add grid to vertical box */
 	gtk_box_pack_start (GTK_BOX (box), grid, FALSE, TRUE, 0);
 
 	/* Add margin to value entry grid */
 	gtk_widget_set_margin_top(grid,15);
-	gtk_widget_set_margin_start(grid,50);
-	gtk_widget_set_margin_end(grid,50);
+	//gtk_widget_set_margin_start(grid,50);
+	//gtk_widget_set_margin_end(grid,50);
 	gtk_widget_set_margin_bottom(grid,0);
 
 	/* Add date entry to value entry grid */
-	date_label = gtk_label_new("Date (yy/mm/dd)");
+	date_label = gtk_label_new("Date (dd/mm/yy)");
 	gtk_grid_attach(GTK_GRID(grid),date_label,0,0,1,1);
-	gtk_widget_set_margin_end(date_label,10);
+	//gtk_widget_set_margin_end(date_label,10);
 	date = gtk_entry_new();
-	gtk_widget_set_margin_top(date,2);
+	//gtk_widget_set_margin_top(date,2);
 	gtk_grid_attach(GTK_GRID(grid),date,0,1,1,1);
-	gtk_widget_set_margin_end(date,10);
-
+	//gtk_widget_set_margin_end(date,10);
 	/* Add month entry to value entry grid */
 	/*
 	month_label = gtk_label_new("Month");
@@ -216,6 +220,7 @@ int main(int argc, char **argv)
 	gtk_grid_attach(GTK_GRID(grid),month,0,1,1,1);
 	gtk_widget_set_margin_end(month,10);
 	*/
+	gtk_entry_set_width_chars (GTK_ENTRY(date), 8);
 
 	/* Add day entry to value entry grid */
 	/*
@@ -230,46 +235,55 @@ int main(int argc, char **argv)
 	/* Add person entry to value entry grid */
 	person_label = gtk_label_new("Person");
 	gtk_grid_attach(GTK_GRID(grid),person_label,1,0,1,1);
-	gtk_widget_set_margin_end(person_label,10);
+	//gtk_widget_set_margin_end(person_label,10);
 	person = gtk_entry_new();
-	gtk_widget_set_margin_top(person,2);
+	//gtk_widget_set_margin_top(person,2);
 	gtk_grid_attach(GTK_GRID(grid),person,1,1,1,1);
-	gtk_widget_set_margin_end(person,10);
+	//gtk_widget_set_margin_end(person,10);
+	gtk_entry_set_width_chars (GTK_ENTRY(person), 20);
 
 	/* Add amount entry to value entry grid */
 	amount_label = gtk_label_new("Amount");
 	gtk_grid_attach(GTK_GRID(grid),amount_label,2,0,1,1);
-	gtk_widget_set_margin_end(amount_label,10);
+	//gtk_widget_set_margin_end(amount_label,10);
 	amount = gtk_entry_new();
-	gtk_widget_set_margin_top(amount,2);
+	//gtk_widget_set_margin_top(amount,2);
 	gtk_grid_attach(GTK_GRID(grid),amount,2,1,1,1);
-	gtk_widget_set_margin_end(amount,10);
+	//gtk_widget_set_margin_end(amount,10);
+	gtk_entry_set_width_chars (GTK_ENTRY(amount), 10);
 
 	/* Add 'add' button to value entry grid */
 	add_label = gtk_label_new("");
 	gtk_grid_attach(GTK_GRID(grid),add_label,3,0,1,1);
 	add = gtk_button_new_with_label("Add");
 	gtk_grid_attach(GTK_GRID(grid), add, 3, 1, 1, 1);
+
+	/* Center grid */
          gtk_widget_set_halign (grid, GTK_ALIGN_CENTER);
+
+	/* Create horizontally oriented box to horizontally pack progam widgets into */
+	box2 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL,70);
+	/* Pack horizontal box into vertical box */
+	gtk_box_pack_start (GTK_BOX (box), box2, FALSE, TRUE, 0);
+        gtk_widget_set_halign (box2, GTK_ALIGN_CENTER);
 
 	/* Create a scrollable window */
 	scrolled_window = gtk_scrolled_window_new(NULL, NULL);
 	/* Create margin for scrollable window */
-	gtk_widget_set_margin_top(scrolled_window,0);
-	gtk_widget_set_margin_start(scrolled_window,50);
-	gtk_widget_set_margin_end(scrolled_window,50);
-	gtk_widget_set_margin_bottom(scrolled_window,0);
+	//gtk_widget_set_margin_top(scrolled_window,0);
+	//gtk_widget_set_margin_start(scrolled_window,50);
+	//gtk_widget_set_margin_end(scrolled_window,0);
+	//gtk_widget_set_margin_bottom(scrolled_window,0);
 	/* Always include a vertical scroll cursor on scroll window */
- 	gtk_widget_set_size_request (scrolled_window, 600, 100);
+ 	gtk_widget_set_size_request (scrolled_window, 340, 100);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window), GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
-	/* Add scrollable window to box */
-	gtk_box_pack_start (GTK_BOX (box), scrolled_window, TRUE, TRUE, 0);
-         gtk_widget_set_halign (scrolled_window, GTK_ALIGN_CENTER);
+	/* Add scrollable window to horizontal box */
+	gtk_box_pack_start (GTK_BOX (box2), scrolled_window, TRUE, TRUE, 0);
+	/* Align scrollable window to center */
+        gtk_widget_set_halign (scrolled_window, GTK_ALIGN_START);
          //gtk_widget_set_valign (scrolled_window, GTK_ALIGN_START);
-	//gtk_grid_attach(GTK_GRID(grid),scrolled_window,0,4,4,4);
 	//gtk_widget_set_hexpand(scrolled_window, TRUE);
 	//gtk_widget_set_vexpand(scrolled_window, TRUE);
-	 //gtk_widget_set_hexpand (scrolled_window, TRUE);
 	
 	g_object_set (scrolled_window, "vexpand", TRUE, NULL);
 	g_object_set (scrolled_window, "hexpand", FALSE, NULL);
@@ -329,6 +343,49 @@ int main(int argc, char **argv)
 		"text", AMOUNT_C,
 		NULL);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
+
+	/* Create grid for right-side buttons */
+	grid2 = gtk_grid_new();
+	gtk_grid_set_row_spacing (GTK_GRID(grid2),20);
+
+	/* Create filter button */
+	filter_button = gtk_button_new_with_label("Filter");
+	gtk_grid_attach(GTK_GRID(grid2), filter_button, 0, 0, 1, 1);
+
+	/* Create search button */
+	search_button = gtk_button_new_with_label("Search");
+	gtk_grid_attach(GTK_GRID(grid2), search_button, 0, 1, 1, 1);
+
+	/* Create edit button */
+	edit_button = gtk_button_new_with_label("Edit");
+	gtk_grid_attach(GTK_GRID(grid2), edit_button, 0, 2, 1, 1);
+
+	/* Create delete button */
+	delete_button = gtk_button_new_with_label("Delete");
+	gtk_grid_attach(GTK_GRID(grid2), delete_button, 0, 3, 1, 1);
+
+	/* Create hide button */
+	hide_button = gtk_button_new_with_label("Hide");
+	//gtk_grid_attach(GTK_GRID(grid2), hide_button, 0, 4, 1, 1);
+
+	/* Create Hide all button */
+	hide_all_button = gtk_button_new_with_label("Hide all");
+	//gtk_grid_attach(GTK_GRID(grid2), hide_all_button, 0, 5, 1, 1);
+
+	/* Create Show all button */
+	show_all_button = gtk_button_new_with_label("Show all");
+	//gtk_grid_attach(GTK_GRID(grid2), show_all_button, 0, 6, 1, 1);
+
+	/* Create Save button */
+	save_button = gtk_button_new_with_label("Show all");
+	//gtk_grid_attach(GTK_GRID(grid2), save_button, 0, 7, 1, 1);
+
+	/* Pack grid2 to box2 */
+	gtk_box_pack_start (GTK_BOX (box2), grid2, TRUE, TRUE, 0);
+
+	/* Align grid2 */
+        gtk_widget_set_halign (grid2, GTK_ALIGN_START);
+        gtk_widget_set_valign (grid2, GTK_ALIGN_CENTER);
 
 	/* error widget */
 	error_buffer = gtk_text_buffer_new(NULL);
