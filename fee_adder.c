@@ -206,19 +206,14 @@ int main(int argc, char **argv)
 	/* Add date entry to value entry grid */
 	date_label = gtk_label_new("Date (dd/mm/yy)");
 	gtk_grid_attach(GTK_GRID(grid),date_label,0,0,1,1);
-	//gtk_widget_set_margin_end(date_label,10);
 	date = gtk_entry_new();
-	//gtk_widget_set_margin_top(date,2);
 	gtk_grid_attach(GTK_GRID(grid),date,0,1,1,1);
-	//gtk_widget_set_margin_end(date,10);
 	/* Add month entry to value entry grid */
 	/*
 	month_label = gtk_label_new("Month");
 	gtk_grid_attach(GTK_GRID(grid),month_label,0,0,1,1);
 	month = gtk_entry_new();
-	gtk_widget_set_margin_top(month,2);
 	gtk_grid_attach(GTK_GRID(grid),month,0,1,1,1);
-	gtk_widget_set_margin_end(month,10);
 	*/
 	gtk_entry_set_width_chars (GTK_ENTRY(date), 8);
 
@@ -227,29 +222,21 @@ int main(int argc, char **argv)
 	day_label = gtk_label_new("Day");
 	gtk_grid_attach(GTK_GRID(grid),day_label,0,0,1,1);
 	day = gtk_entry_new();
-	gtk_widget_set_margin_top(day,2);
 	gtk_grid_attach(GTK_GRID(grid),day,0,1,1,1);
-	gtk_widget_set_margin_end(day,10);
 	*/
 
 	/* Add person entry to value entry grid */
 	person_label = gtk_label_new("Person");
 	gtk_grid_attach(GTK_GRID(grid),person_label,1,0,1,1);
-	//gtk_widget_set_margin_end(person_label,10);
 	person = gtk_entry_new();
-	//gtk_widget_set_margin_top(person,2);
 	gtk_grid_attach(GTK_GRID(grid),person,1,1,1,1);
-	//gtk_widget_set_margin_end(person,10);
 	gtk_entry_set_width_chars (GTK_ENTRY(person), 20);
 
 	/* Add amount entry to value entry grid */
 	amount_label = gtk_label_new("Amount");
 	gtk_grid_attach(GTK_GRID(grid),amount_label,2,0,1,1);
-	//gtk_widget_set_margin_end(amount_label,10);
 	amount = gtk_entry_new();
-	//gtk_widget_set_margin_top(amount,2);
 	gtk_grid_attach(GTK_GRID(grid),amount,2,1,1,1);
-	//gtk_widget_set_margin_end(amount,10);
 	gtk_entry_set_width_chars (GTK_ENTRY(amount), 10);
 
 	/* Add 'add' button to value entry grid */
@@ -279,12 +266,9 @@ int main(int argc, char **argv)
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window), GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
 	/* Add scrollable window to horizontal box */
 	gtk_box_pack_start (GTK_BOX (box2), scrolled_window, TRUE, TRUE, 0);
-	/* Align scrollable window to center */
+	/* Align scrollable window */
         gtk_widget_set_halign (scrolled_window, GTK_ALIGN_START);
-         //gtk_widget_set_valign (scrolled_window, GTK_ALIGN_START);
-	//gtk_widget_set_hexpand(scrolled_window, TRUE);
-	//gtk_widget_set_vexpand(scrolled_window, TRUE);
-	
+        //gtk_widget_set_valign (scrolled_window, GTK_ALIGN_START);
 	g_object_set (scrolled_window, "vexpand", TRUE, NULL);
 	g_object_set (scrolled_window, "hexpand", FALSE, NULL);
         //g_object_set (scrolled_window, "margin", 10, NULL);
