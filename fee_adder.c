@@ -1,11 +1,10 @@
-/* TODO create add_all_rows() function to update above
- * to check how to do so in a memory safe way, check this https://github.com/hluk/sprinter-gtk/blob/master/main.c */
+/* TODO launch external window after filters button */
+/* TODO add 'save', 'open' buttons */
 /* TODO put border around entire value entry section, to remove awkward look */
 /* TODO add 'show all' button */
 /* TODO add switch below 'set filters' */
 /* TODO make totals BOLD and BIG */
 /* TODO add payment method column */
-/* TODO add 'save', 'open' buttons */
 /* TODO less 0s https://docs.gtk.org/gtk3/treeview-tutorial.html#cell-data-functions */
 #include <stdlib.h>
 #include <stdio.h>
