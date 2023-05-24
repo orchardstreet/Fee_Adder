@@ -1,5 +1,9 @@
 /* TODO create add_all_rows() function to update above
  * to check how to do so in a memory safe way, check this https://github.com/hluk/sprinter-gtk/blob/master/main.c */
+/* TODO put border around entire value entry section, to remove awkward look */
+/* TODO add 'show all' button */
+/* TODO add switch below 'set filters' */
+/* TODO make totals BOLD and BIG */
 /* TODO add payment method column */
 /* TODO add 'save', 'open' buttons */
 /* TODO less 0s https://docs.gtk.org/gtk3/treeview-tutorial.html#cell-data-functions */
@@ -25,12 +29,53 @@ GtkWidget *amount_entry, *date_entry, *person_entry, *method_entry;
 GtkTextBuffer *error_buffer;
 GtkWidget *error_widget;
 GtkWidget *scrolled_window;
+GtkWidget *total_filtered_results_label;
+GtkWidget *total_results_label;
 GtkWidget *window;
-unsigned char scrolling_to_end = 0;
+unsigned char scrolling_to_end;
+double filtered_amount_total;
+double amount_total;
 
 /* Functions */
 void skip_whitespace(char **text_skip) {
 	for(;**text_skip == ' ';(*text_skip)++) {}; 
+}
+
+unsigned char add_all_rows(GtkTreeModel *model)
+{
+	/* first parameter of this function is accepting our base GtkListStore cast to a GtkTreeModel */
+	GtkTreeIter iter;
+	gboolean is_visible;
+	gdouble gitem_amount;
+	double item_amount = 0;
+	char string_from_double[50] = {0};
+
+	if(gtk_tree_model_get_iter_first(model,&iter) == FALSE) {
+		gtk_label_set_text( GTK_LABEL(total_results_label), "0");
+		gtk_label_set_text( GTK_LABEL(total_filtered_results_label), "0");
+		return SUCCESS;
+	}
+
+	do {
+		gtk_tree_model_get(model, &iter, SHOW_C,&is_visible,-1); 
+		gtk_tree_model_get(model, &iter, AMOUNT_C, &gitem_amount, -1);
+		item_amount = (double) gitem_amount;
+		printf("item amount: %lf\n",item_amount);
+		if(is_visible) 
+			filtered_amount_total += item_amount;
+		amount_total += item_amount;
+
+	} while(gtk_tree_model_iter_next(model,&iter));
+
+	printf("filtered total paid: %lf\n",filtered_amount_total);
+	printf("total paid: %lf\n",amount_total);
+	snprintf(string_from_double,50,"%.2f",amount_total);
+	gtk_label_set_text(GTK_LABEL(total_results_label), string_from_double);
+	snprintf(string_from_double,50,"%.2f",filtered_amount_total);
+	gtk_label_set_text(GTK_LABEL(total_filtered_results_label), string_from_double);
+
+	return SUCCESS;
+
 }
 
 gboolean keypress_function(GtkWidget *widget, GdkEventKey *event, gpointer data)
@@ -76,9 +121,9 @@ unsigned char str_to_double(char *str, double *number)
 		gtk_text_buffer_set_text(error_buffer,"Fee amount entered has an invalid format."
 				" Please enter ascii digits.  You can include a decimal.",-1);
 		return FAILURE;
-	} else if (*number >= HUGE_VAL || *number <= -HUGE_VAL) {
-		gtk_text_buffer_set_text(error_buffer,"Fee amount entered has too many digits",-1);
-		return FAILURE;
+//	} else if (*number >= HUGE_VAL || *number <= -HUGE_VAL) {
+//		gtk_text_buffer_set_text(error_buffer,"Fee amount entered has too many digits",-1);
+//		return FAILURE;
 	} else if (*number <= -7777777777.55 || *number >= 7777777777.55) {
 		gtk_text_buffer_set_text(error_buffer,"Fee amount out of range, should be between"
 				" -7777777777.55 and 7777777777.55",-1);
@@ -159,6 +204,12 @@ void do_add(GtkWidget *widget, gpointer model)
 	}
 	if(str_to_double(amount_ptr,&number) == FAILURE)
 		return;
+	printf("added number: %lf\n",amount_total+number);
+	if(amount_total + number >= 7777777777.55 || amount_total + number <= -7777777777.55) {
+		gtk_text_buffer_set_text(error_buffer,"Cannot add amount. Amount total out of range, should be between"
+				" -7777777777.55 and 7777777777.55",-1);
+		return;
+	}
 
 	scrolling_to_end = 1;
 	gtk_list_store_insert_with_values(model, NULL, -1,
@@ -175,6 +226,8 @@ void do_add(GtkWidget *widget, gpointer model)
 	gtk_entry_set_text(GTK_ENTRY(amount_entry), "");
 	gtk_entry_set_text(GTK_ENTRY(method_entry), "");
 
+	add_all_rows(GTK_TREE_MODEL(model));
+
 }
 
 /* Main */
@@ -187,8 +240,8 @@ int main(int argc, char **argv)
 	GtkWidget *filter_button, *search_button, *edit_button, *add_button, 
 		*hide_button, *delete_button, *hide_all_button, *show_all_button, *save_button,
 			*method_label;
-	GtkListStore *model;
 	GtkTreeViewColumn *column, *column1, *column2, *column3;
+	GtkListStore *model;
 	GtkTreeModel *filter;
 
 	/* Init GTK */
@@ -232,7 +285,7 @@ int main(int argc, char **argv)
 	gtk_entry_set_width_chars (GTK_ENTRY(date_entry), 8);
 
 	/* Add person entry to value entry grid */
-	person_label = gtk_label_new("Person");
+	person_label = gtk_label_new("Customer");
         gtk_widget_set_halign (person_label, GTK_ALIGN_START);
 	gtk_widget_set_margin_start(person_label,3);
 	gtk_grid_attach(GTK_GRID(grid),person_label,1,0,1,1);
@@ -250,7 +303,7 @@ int main(int argc, char **argv)
 	gtk_entry_set_width_chars (GTK_ENTRY(method_entry), 10);
 
 	/* Add amount entry to value entry grid */
-	amount_label = gtk_label_new("Amount");
+	amount_label = gtk_label_new("Shekels");
         gtk_widget_set_halign (amount_label, GTK_ALIGN_START);
 	gtk_widget_set_margin_start(amount_label,3);
 	gtk_grid_attach(GTK_GRID(grid),amount_label,3,0,1,1);
@@ -259,7 +312,7 @@ int main(int argc, char **argv)
 	gtk_entry_set_width_chars (GTK_ENTRY(amount_entry), 10);
 	/* Align value entry grid */
         gtk_widget_set_halign (grid, GTK_ALIGN_CENTER);
-	gtk_widget_set_margin_end(grid,45);
+	gtk_widget_set_margin_end(grid,70);
 
 	/* Add 'add' button to value entry grid */
 	add_label = gtk_label_new("");
@@ -330,7 +383,7 @@ int main(int argc, char **argv)
 
 	/* Add columns to treeview */
 	/* Treeview column 0 */
-	column = gtk_tree_view_column_new_with_attributes("Date",
+	column = gtk_tree_view_column_new_with_attributes("Date paid",
 		gtk_cell_renderer_spin_new(),
 		"text", DATE_C,
 		NULL);
@@ -339,7 +392,7 @@ int main(int argc, char **argv)
 	gtk_tree_view_column_set_fixed_width (column,125);
 
 	/* Treeview column 1 */
-	column1 = gtk_tree_view_column_new_with_attributes("Person",
+	column1 = gtk_tree_view_column_new_with_attributes("Customer",
 		gtk_cell_renderer_text_new(),
 		"text", PERSON_C,
 		NULL);
@@ -358,7 +411,7 @@ int main(int argc, char **argv)
 
 
 	/* Treeview column 3 */
-	column3 = gtk_tree_view_column_new_with_attributes("Amount",
+	column3 = gtk_tree_view_column_new_with_attributes("Shekels",
 		gtk_cell_renderer_text_new(),
 		"text", AMOUNT_C,
 		NULL);
@@ -373,19 +426,19 @@ int main(int argc, char **argv)
 	gtk_widget_set_margin_top(grid2,55);
 
 	/* Create filter button */
-	filter_button = gtk_button_new_with_label("Filter");
+	filter_button = gtk_button_new_with_label("Set filters");
 	gtk_grid_attach(GTK_GRID(grid2), filter_button, 0, 0, 1, 1);
 
 	/* Create search button */
-	search_button = gtk_button_new_with_label("Search");
+	search_button = gtk_button_new_with_label("Show all");
 	gtk_grid_attach(GTK_GRID(grid2), search_button, 0, 1, 1, 1);
 
 	/* Create edit button */
-	edit_button = gtk_button_new_with_label("Edit");
+	edit_button = gtk_button_new_with_label("Edit row");
 	gtk_grid_attach(GTK_GRID(grid2), edit_button, 0, 2, 1, 1);
 
 	/* Create delete button */
-	delete_button = gtk_button_new_with_label("Delete");
+	delete_button = gtk_button_new_with_label("Delete row");
 	gtk_grid_attach(GTK_GRID(grid2), delete_button, 0, 3, 1, 1);
 
 	/* Create hide button */
@@ -411,13 +464,17 @@ int main(int argc, char **argv)
         gtk_widget_set_halign (grid2, GTK_ALIGN_START);
         gtk_widget_set_valign (grid2, GTK_ALIGN_START);
 
+	/* create seperator for before totals */
+	GtkWidget *before_totals_seperator = gtk_separator_new(GTK_ORIENTATION_VERTICAL);
+ 	gtk_widget_set_size_request (before_totals_seperator, 40, 2);
+
 	/* Create grid for totals */
 	GtkWidget *grid3, *filters_applied_label, *filters_applied_results_label, *total_filtered_label,
-		  *total_filtered_results_label, *total_label, *total_results_label;
+		  *total_label;
 	grid3 = gtk_grid_new();
 	/* Set grid spacing */
 	gtk_grid_set_row_spacing (GTK_GRID(grid3),9);
-	gtk_grid_set_column_spacing (GTK_GRID(grid3),6);
+	gtk_grid_set_column_spacing (GTK_GRID(grid3),0);
 	/* Set grid alignment */
         gtk_widget_set_halign (grid3, GTK_ALIGN_END);
 	gtk_widget_set_margin_end(grid3,30);
@@ -426,17 +483,18 @@ int main(int argc, char **argv)
         //gtk_widget_set_halign (filters_applied_label, GTK_ALIGN_START);
 	//filters_applied_results_label = gtk_label_new("date, payment method");
         //gtk_widget_set_halign (filters_applied_results_label, GTK_ALIGN_START);
-	total_filtered_label = gtk_label_new("Total of filtered fees: ");
+	total_filtered_label = gtk_label_new("Total paid including filters:  ₪");
         gtk_widget_set_halign (total_filtered_label, GTK_ALIGN_END);
-	total_filtered_results_label = gtk_label_new("40000");
+	total_filtered_results_label = gtk_label_new("0.00");
         gtk_widget_set_halign (total_filtered_results_label, GTK_ALIGN_END);
-	total_label = gtk_label_new("Total fees: ");
+	total_label = gtk_label_new("Total paid:  ₪");
         gtk_widget_set_halign (total_label, GTK_ALIGN_END);
-	total_results_label = gtk_label_new("50000");
+	total_results_label = gtk_label_new("0.00");
         gtk_widget_set_halign (total_results_label, GTK_ALIGN_END);
 	/* Attach grid members */
 	//gtk_grid_attach(GTK_GRID(grid3),filters_applied_label,0,0,1,1);
 	//gtk_grid_attach(GTK_GRID(grid3),filters_applied_results_label,1,0,3,1);
+	gtk_grid_attach(GTK_GRID(grid3),before_totals_seperator,0,0,2,1);
 	gtk_grid_attach(GTK_GRID(grid3),total_filtered_label,0,1,1,1);
 	gtk_grid_attach(GTK_GRID(grid3),total_filtered_results_label,1,1,1,1);
 	gtk_grid_attach(GTK_GRID(grid3),total_label,0,2,1,1);
