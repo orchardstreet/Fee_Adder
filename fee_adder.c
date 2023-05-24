@@ -2,7 +2,10 @@
 /* TODO add 'save', 'open' buttons */
 /* TODO put border around entire value entry section, to remove awkward look */
 /* TODO add 'show all' button */
+/* TODO filter out special characters from input */
 /* TODO add switch below 'set filters' */
+/* TODO see where two numbers added messes up total at bottom, and adjust the range
+ * of acceptable values in do_add accordingly */
 /* TODO make totals BOLD and BIG */
 /* TODO add payment method column */
 /* TODO less 0s https://docs.gtk.org/gtk3/treeview-tutorial.html#cell-data-functions */
@@ -14,14 +17,15 @@
 #define _ISOC99_SOURCE 
 #include <math.h>
 #define MAX_ENTRIES 100000
-#define MAX_DATE_CHARS 9 
+#define MAX_DATE_CHARS 13 
 #define MAX_METHOD_CHARS 20 /* adjustable */ 
 #define MAX_PERSON_CHARS 100 /* adjustable */
 #define MAX_INDIVIDUAL_FEE_NUMBER_CHARS 21
+#define FILENAME_SIZE 250
 
 /* enums */
 enum exit_codes {SUCCESS,FAILURE};
-enum columns {DATE_C, PERSON_C, PAYMENT_METHOD_C, AMOUNT_C, SHOW_C, TOTAL_COLUMNS};
+enum columns {DATE_C, PERSON_C, PAYMENT_METHOD_C, AMOUNT_C, YEAR_C, MONTH_C, DAY_C, SHOW_C, TOTAL_COLUMNS};
 
 /* Init global variables */
 GtkWidget *amount_entry, *date_entry, *person_entry, *method_entry;
@@ -34,10 +38,77 @@ GtkWidget *window;
 unsigned char scrolling_to_end;
 double filtered_amount_total;
 double amount_total;
+char filename[FILENAME_SIZE] = "purchase_log.csv";
 
 /* Functions */
 void skip_whitespace(char **text_skip) {
 	for(;**text_skip == ' ';(*text_skip)++) {}; 
+}
+
+/* TODO check error on library functions and handle accordingly */
+void save_items(GtkWidget *widget, gpointer model_void) {
+	GtkTreeModel *model = (GtkTreeModel *)model_void;
+	GtkTreeIter iter;
+	char save_message[FILENAME_SIZE + 20] = {0};
+	/*year*/
+	guint gyear_s;
+	unsigned int year_s;
+	/*month*/
+	guchar gmonth_s;
+	unsigned char month_s;
+	/*day*/
+	guchar gday_s;
+	unsigned char day_s;
+	/*name*/
+	gchar *gname_s;
+	char name_s[MAX_PERSON_CHARS] = {0};
+	/*method*/
+	gchar *gmethod_s;
+	char method_s[MAX_METHOD_CHARS] = {0};
+	/*amount*/
+	gdouble gitem_amount;
+	double item_amount;
+	FILE *the_file;
+
+	the_file = fopen(filename,"w+");
+	snprintf(save_message,sizeof(save_message),"File saved at %s",filename);
+
+	if(gtk_tree_model_get_iter_first(model,&iter) == FALSE) {
+		gtk_text_buffer_set_text(error_buffer,save_message,-1);
+		fclose(the_file);
+		return;
+	}
+
+	do {
+		/*year*/
+		gtk_tree_model_get(model, &iter, YEAR_C, &gyear_s, -1);
+		year_s = (unsigned int) gyear_s;
+		/*month*/
+		gtk_tree_model_get(model, &iter, MONTH_C, &gmonth_s, -1);
+		month_s = (unsigned char) gmonth_s;
+		/*day*/
+		gtk_tree_model_get(model, &iter, DAY_C, &gday_s, -1);
+		day_s = (unsigned char) gday_s;
+		/*name*/
+		gtk_tree_model_get(model, &iter, PERSON_C, &gname_s, -1);
+		snprintf(name_s,sizeof(name_s),"%s",(char *)gname_s);
+		g_free(gname_s);
+		/*method*/
+		gtk_tree_model_get(model, &iter, PAYMENT_METHOD_C, &gmethod_s, -1);
+		snprintf(method_s,sizeof(method_s),"%s",(char *)gmethod_s);
+		g_free(gmethod_s);
+		/*amount*/
+		gtk_tree_model_get(model, &iter, AMOUNT_C, &gitem_amount, -1);
+		item_amount = (double) gitem_amount;
+
+		fprintf(the_file,"%u,%u,%u,%s,%s,%.2lf\n",day_s,month_s,year_s,name_s,method_s,item_amount);
+
+	} while(gtk_tree_model_iter_next(model,&iter));
+
+
+	fclose(the_file);
+	gtk_text_buffer_set_text(error_buffer,save_message,-1);
+
 }
 
 unsigned char add_all_rows(GtkTreeModel *model)
@@ -48,6 +119,8 @@ unsigned char add_all_rows(GtkTreeModel *model)
 	gdouble gitem_amount;
 	double item_amount = 0;
 	char string_from_double[50] = {0};
+	amount_total = 0;
+	filtered_amount_total = 0;
 
 	if(gtk_tree_model_get_iter_first(model,&iter) == FALSE) {
 		gtk_label_set_text( GTK_LABEL(total_results_label), "0");
@@ -68,9 +141,9 @@ unsigned char add_all_rows(GtkTreeModel *model)
 
 	printf("filtered total paid: %lf\n",filtered_amount_total);
 	printf("total paid: %lf\n",amount_total);
-	snprintf(string_from_double,50,"%.2f",amount_total);
+	snprintf(string_from_double,50,"%.2lf",amount_total);
 	gtk_label_set_text(GTK_LABEL(total_results_label), string_from_double);
-	snprintf(string_from_double,50,"%.2f",filtered_amount_total);
+	snprintf(string_from_double,50,"%.2lf",filtered_amount_total);
 	gtk_label_set_text(GTK_LABEL(total_filtered_results_label), string_from_double);
 
 	return SUCCESS;
@@ -152,6 +225,14 @@ unsigned char validate_person(char *text)
 				"recompile to allow longer person names",-1);
 		return FAILURE;
 	}
+	if(strchr(text,',')) {
+		gtk_text_buffer_set_text(error_buffer,"Customer name cannot contain commas",-1);
+		return FAILURE;
+	}
+	if(strchr(text,'\n')) {
+		gtk_text_buffer_set_text(error_buffer,"Customer name cannot contain newlines",-1);
+		return FAILURE;
+	}
 	return SUCCESS;
 }
 
@@ -162,18 +243,69 @@ unsigned char validate_method(char *text)
 				"recompile to allow longer method names",-1);
 		return FAILURE;
 	}
+	if(strchr(text,',')) {
+		gtk_text_buffer_set_text(error_buffer,"Method name cannot contain commas",-1);
+		return FAILURE;
+	}
+	if(strchr(text,'\n')) {
+		gtk_text_buffer_set_text(error_buffer,"Method name cannot contain newlines",-1);
+		return FAILURE;
+	}
 	return SUCCESS;
 }
 
-unsigned char validate_date (char *text)
+unsigned char validate_date (char *text, unsigned int *year_s, unsigned char *month_s, unsigned char *day_s)
 {
+	unsigned long number;
+	char *endptr;
+
+	/* return failed if nothing in string */
 	if(!strlen(text)) {
 		gtk_text_buffer_set_text(error_buffer,"Please enter a date",-1);
 		return FAILURE;
-	} else if(strlen(text) > MAX_DATE_CHARS - 1)  {
-		gtk_text_buffer_set_text(error_buffer,"Date is too long, must be in dd/mm/yy format",-1);
+	}
+	if(strlen(text) > MAX_DATE_CHARS - 1) {
+		gtk_text_buffer_set_text(error_buffer,"Entered too many characters, must be in dd/mm/yy format",-1);
 		return FAILURE;
 	}
+
+	/* skip whitespace */
+	skip_whitespace(&text);
+	if(*text == '\0') {
+		gtk_text_buffer_set_text(error_buffer,"0: Invalid date, must be in dd/mm/yy format",-1);
+		return FAILURE;
+	}
+	/* find day */
+	number = strtol(text,&endptr,10);
+	if(endptr == text || number < 0 || number > 32 || *endptr != '/') {
+		gtk_text_buffer_set_text(error_buffer,"Invalid date, must be in dd/mm/yy format",-1);
+		return FAILURE;
+	}
+	*day_s = number;
+	text = endptr + 1;
+	/* find month */
+	number = strtol(text,&endptr,10);
+	if(endptr == text || number < 0 || number > 13 || *endptr != '/') {
+		gtk_text_buffer_set_text(error_buffer,"Invalid date, must be in dd/mm/yy format",-1);
+		return FAILURE;
+	}
+	*month_s = number;
+	text = endptr + 1;
+	/* find year */
+	number = strtol(text,&endptr,10);
+	if((endptr == text || number < 0 || number > 65534) && !(*endptr == '\0' || *endptr == ' ')) {
+		gtk_text_buffer_set_text(error_buffer,"Invalid date, must be in dd/mm/yy format",-1);
+		return FAILURE;
+	}
+	*year_s = number;
+	text = endptr;
+	/* skip whitespace */
+	skip_whitespace(&text);
+	if(*text != '\0') {
+		gtk_text_buffer_set_text(error_buffer,"Invalid date, must be in dd/mm/yy format",-1);
+		return FAILURE;
+	}
+
 	return SUCCESS;
 }
 
@@ -191,8 +323,11 @@ void do_add(GtkWidget *widget, gpointer model)
 	char *person_ptr = (char *)gtk_entry_get_text(GTK_ENTRY(person_entry));
 	char *amount_ptr = (char *)gtk_entry_get_text(GTK_ENTRY(amount_entry));
 	char *method_ptr = (char *)gtk_entry_get_text(GTK_ENTRY(method_entry));
+	unsigned int year_s;
+	unsigned char month_s;
+	unsigned char day_s;
 
-	if(validate_date(date_ptr) == FAILURE) {
+	if(validate_date(date_ptr,&year_s,&month_s,&day_s) == FAILURE) {
 		return;
 	}
 	if(validate_person(person_ptr) == FAILURE) {
@@ -216,6 +351,9 @@ void do_add(GtkWidget *widget, gpointer model)
 					PERSON_C, person_ptr,
 					PAYMENT_METHOD_C, method_ptr,
 					AMOUNT_C, number,
+					YEAR_C, year_s,
+					MONTH_C, month_s,
+					DAY_C, day_s,
 					SHOW_C, 1, /* 1 for, yes show in tree */
 					-1);
 
@@ -354,6 +492,9 @@ int main(int argc, char **argv)
 		G_TYPE_STRING,  /* Third column, person, PERSON_C */
 		G_TYPE_STRING,  /* Fourth column, payment method, PAYMENT_METHOD_C */
 		G_TYPE_DOUBLE,  /* Fifth column, amount, AMOUNT_C */
+		G_TYPE_UINT,   /* Sixth column, year, YEAR_C */
+		G_TYPE_UCHAR,   /* Seventh column, month, MONTH_C */
+		G_TYPE_UCHAR,   /* Eight column, day, DAY_C */
 		G_TYPE_BOOLEAN  /* 1 for show, 0 for hide */
 		);
 
@@ -453,8 +594,8 @@ int main(int argc, char **argv)
 	//gtk_grid_attach(GTK_GRID(grid2), show_all_button, 0, 6, 1, 1);
 
 	/* Create Save button */
-	save_button = gtk_button_new_with_label("Show all");
-	//gtk_grid_attach(GTK_GRID(grid2), save_button, 0, 7, 1, 1);
+	save_button = gtk_button_new_with_label("Save");
+	gtk_grid_attach(GTK_GRID(grid2), save_button, 0, 7, 1, 1);
 
 	/* Pack grid2 to box2 */
 	gtk_box_pack_start (GTK_BOX (box2), grid2, TRUE, TRUE, 0);
@@ -508,6 +649,7 @@ int main(int argc, char **argv)
 
 	/* After clicking add, call 'do_add' function */
 	g_signal_connect(add_button,"clicked",G_CALLBACK(do_add),model);
+	g_signal_connect(save_button,"clicked",G_CALLBACK(save_items),GTK_TREE_MODEL(model));
 
 	/* Add tree view to scrolled window */
 	gtk_container_add(GTK_CONTAINER(scrolled_window),tree_view);	
