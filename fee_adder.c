@@ -1,4 +1,3 @@
-/* TODO add to bottom, two total label to add total of all, including unhidden */
 /* TODO create add_all_rows() function to update above
  * to check how to do so in a memory safe way, check this https://github.com/hluk/sprinter-gtk/blob/master/main.c */
 /* TODO add payment method column */
