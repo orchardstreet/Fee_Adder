@@ -1,7 +1,5 @@
-/* TODO should probably sprintf("%.2lf) and then strtodouble before add */
 /* TODO launch external window after filters button */
 /* TODO put border around entire value entry section, to remove awkward look */
-/* TODO add 'show all' button */
 /* TODO filter out special characters from input */
 /* TODO add switch below 'set filters' */
 /* TODO see where two numbers added messes up total at bottom, and adjust the range
@@ -15,12 +13,13 @@
 #include <string.h>
 #define _ISOC99_SOURCE 
 #include <math.h>
-#define MAX_ENTRIES 100000
-#define MAX_DATE_CHARS 13 
-#define MAX_METHOD_CHARS 20 /* adjustable */ 
-#define MAX_PERSON_CHARS 100 /* adjustable */
-#define MAX_INDIVIDUAL_FEE_NUMBER_CHARS 21
-#define FILENAME_SIZE 250
+#define MAX_ENTRIES 100000 /* unused */
+#define MAX_DATE_CHARS 21 /* adjustable, includes \0 */ 
+#define MAX_METHOD_CHARS 21 /* adjustable, includes \0 */ 
+#define MAX_PERSON_CHARS 101 /* adjustable, includes \0 */
+#define MAX_AMOUNT_CHARS 15 /* double has a precision of 18
+			     * so this limits that and also large numbers */
+#define FILENAME_SIZE 250 /* adjustable */
 
 /* enums */
 enum exit_codes {SUCCESS,FAILURE};
@@ -215,6 +214,10 @@ unsigned char validate_amount(char *str, double *number)
 		gtk_text_buffer_set_text(error_buffer,"Please enter a fee amount",-1);
 		return FAILURE;
 	}
+	if(strlen(str) > MAX_AMOUNT_CHARS - 1)  {
+		gtk_text_buffer_set_text(error_buffer,"Too many characters entered for amount",-1);
+		return FAILURE;
+	}
 
 	*number = strtod(str,&endptr);
 
@@ -247,7 +250,8 @@ unsigned char validate_person(char *text)
 	if(!strlen(text)) {
 		gtk_text_buffer_set_text(error_buffer,"Please enter a person",-1);
 		return FAILURE;
-	}else if(strlen(text) > MAX_PERSON_CHARS - 1)  {
+	}
+	if(strlen(text) > MAX_PERSON_CHARS - 1)  {
 		gtk_text_buffer_set_text(error_buffer,"Name of person is too long, "
 				"recompile to allow longer person names",-1);
 		return FAILURE;
