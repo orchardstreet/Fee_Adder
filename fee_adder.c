@@ -1,5 +1,5 @@
+/* TODO should probably sprintf("%.2lf) and then strtodouble before add */
 /* TODO launch external window after filters button */
-/* TODO add 'save', 'open' buttons */
 /* TODO put border around entire value entry section, to remove awkward look */
 /* TODO add 'show all' button */
 /* TODO filter out special characters from input */
@@ -7,7 +7,6 @@
 /* TODO see where two numbers added messes up total at bottom, and adjust the range
  * of acceptable values in do_add accordingly */
 /* TODO make totals BOLD and BIG */
-/* TODO add payment method column */
 /* TODO less 0s https://docs.gtk.org/gtk3/treeview-tutorial.html#cell-data-functions */
 #include <stdlib.h>
 #include <stdio.h>
