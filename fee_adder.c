@@ -275,7 +275,7 @@ unsigned char validate_date (char *text, unsigned int *year_s, unsigned char *mo
 		return FAILURE;
 	}
 	/* find day */
-	number = strtol(text,&endptr,10);
+	number = strtoul(text,&endptr,10);
 	if(endptr == text || number < 0 || number > 32 || *endptr != '/') {
 		gtk_text_buffer_set_text(error_buffer,"Invalid date, must be in dd/mm/yy format",-1);
 		return FAILURE;
@@ -283,7 +283,7 @@ unsigned char validate_date (char *text, unsigned int *year_s, unsigned char *mo
 	*day_s = number;
 	text = endptr + 1;
 	/* find month */
-	number = strtol(text,&endptr,10);
+	number = strtoul(text,&endptr,10);
 	if(endptr == text || number < 0 || number > 13 || *endptr != '/') {
 		gtk_text_buffer_set_text(error_buffer,"Invalid date, must be in dd/mm/yy format",-1);
 		return FAILURE;
@@ -291,7 +291,7 @@ unsigned char validate_date (char *text, unsigned int *year_s, unsigned char *mo
 	*month_s = number;
 	text = endptr + 1;
 	/* find year */
-	number = strtol(text,&endptr,10);
+	number = strtoul(text,&endptr,10);
 	if((endptr == text || number < 0 || number > 65534) && !(*endptr == '\0' || *endptr == ' ')) {
 		gtk_text_buffer_set_text(error_buffer,"Invalid date, must be in dd/mm/yy format",-1);
 		return FAILURE;
