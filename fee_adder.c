@@ -25,6 +25,7 @@
 /* enums */
 enum exit_codes {SUCCESS,FAILURE};
 enum columns {DATE_C, PERSON_C, PAYMENT_METHOD_C, AMOUNT_C, YEAR_C, MONTH_C, DAY_C, SHOW_C, TOTAL_COLUMNS};
+enum endianness {IS_BIG_ENDIAN,IS_LITTLE_ENDIAN};
 
 /* Init global variables */
 GtkWidget *amount_entry, *date_entry, *person_entry, *method_entry;
@@ -34,7 +35,6 @@ GtkWidget *scrolled_window;
 GtkWidget *total_filtered_results_label;
 GtkWidget *total_results_label;
 GtkWidget *window;
-unsigned char scrolling_to_end;
 double filtered_amount_total;
 double amount_total;
 char filename[FILENAME_SIZE] = "purchase_log.csv";
@@ -42,6 +42,18 @@ char filename[FILENAME_SIZE] = "purchase_log.csv";
 /* Functions */
 void skip_whitespace(char **text_skip) {
 	for(;**text_skip == ' ';(*text_skip)++) {}; 
+}
+
+unsigned char
+check_endianness(void)
+{
+
+        unsigned short a=0x1234;
+        if (*((unsigned char *)&a)==0x12)
+                return IS_BIG_ENDIAN;
+        else
+                return IS_LITTLE_ENDIAN;
+
 }
 
 /* TODO check error on library functions and handle accordingly */
@@ -110,14 +122,35 @@ void save_items(GtkWidget *widget, gpointer model_void) {
 
 }
 
+unsigned char truncate_double(double *temp_double)
+{
+
+	char string_from_double[50] = {0};
+	char *endptr;
+
+	snprintf(string_from_double,sizeof(string_from_double),"%.2lf",*temp_double);
+	printf("what snprintf produced trying to convert double to string: %s\n",string_from_double);
+	*temp_double = strtod(string_from_double,&endptr);
+	if(endptr == string_from_double) {
+		gtk_label_set_text( GTK_LABEL(total_results_label), "error");
+		gtk_label_set_text( GTK_LABEL(total_filtered_results_label), "error");
+		gtk_text_buffer_set_text(error_buffer,"snprintf() outputting garbage",-1);
+		fprintf(stderr,"can't convert to double from snprintf created string\n" 
+				"snprintf() outputting garbage\n");
+		return FAILURE;
+	}
+	return SUCCESS;
+
+}
 unsigned char add_all_rows(GtkTreeModel *model)
 {
 	/* first parameter of this function is accepting our base GtkListStore cast to a GtkTreeModel */
 	GtkTreeIter iter;
 	gboolean is_visible;
 	gdouble gitem_amount;
-	double item_amount = 0;
 	char string_from_double[50] = {0};
+	double item_amount = 0;
+	/* set globally defined totals to 0, because we are re-counting everything in the liststore */
 	amount_total = 0;
 	filtered_amount_total = 0;
 
@@ -132,7 +165,11 @@ unsigned char add_all_rows(GtkTreeModel *model)
 		gtk_tree_model_get(model, &iter, AMOUNT_C, &gitem_amount, -1);
 		item_amount = (double) gitem_amount;
 		printf("item amount: %lf\n",item_amount);
-		if(is_visible) 
+		/* truncate double the same way we do the rest of the program, so totals make sense */
+		/* ie with the %.2lf snprintf/sprintf format specifier */
+		if(truncate_double(&item_amount) == FAILURE)
+			return FAILURE;
+		if(is_visible)
 			filtered_amount_total += item_amount;
 		amount_total += item_amount;
 
@@ -162,21 +199,14 @@ gboolean keypress_function(GtkWidget *widget, GdkEventKey *event, gpointer data)
 
 void scroll_to_end (GtkWidget *widget, GdkRectangle *allocate, gpointer user_data)
 {
-	if(scrolling_to_end) {
-		while(gtk_events_pending()) {
-		    gtk_main_iteration();
-		}
-		gtk_widget_show_all(window);
-			GtkAdjustment *adjustment = gtk_scrolled_window_get_vadjustment (
-		GTK_SCROLLED_WINDOW (scrolled_window));
-		double upper = gtk_adjustment_get_upper (adjustment);
-		double page_size = gtk_adjustment_get_page_size (adjustment);
-		gtk_adjustment_set_value (adjustment, upper - page_size - 0);
-	}
-	scrolling_to_end = 0;
+	GtkAdjustment *adjustment = gtk_scrolled_window_get_vadjustment (
+	GTK_SCROLLED_WINDOW (scrolled_window));
+	double upper = gtk_adjustment_get_upper (adjustment);
+	double page_size = gtk_adjustment_get_page_size (adjustment);
+	gtk_adjustment_set_value (adjustment, upper - page_size - 0);
 }
 
-unsigned char str_to_double(char *str, double *number)
+unsigned char validate_amount(char *str, double *number)
 {
 
 	char *endptr;
@@ -206,8 +236,6 @@ unsigned char str_to_double(char *str, double *number)
 			gtk_text_buffer_set_text(error_buffer,"Only digits in fee amount please",-1);
 			return FAILURE;
 		}
-	} else {
-		gtk_text_buffer_set_text(error_buffer," ",-1);
 	}
 
 	return SUCCESS;
@@ -335,7 +363,7 @@ void do_add(GtkWidget *widget, gpointer model)
 	if(validate_method(method_ptr) == FAILURE) {
 		return;
 	}
-	if(str_to_double(amount_ptr,&number) == FAILURE)
+	if(validate_amount(amount_ptr,&number) == FAILURE)
 		return;
 	printf("added number: %lf\n",amount_total+number);
 	if(amount_total + number >= 7777777777.55 || amount_total + number <= -7777777777.55) {
@@ -344,7 +372,6 @@ void do_add(GtkWidget *widget, gpointer model)
 		return;
 	}
 
-	scrolling_to_end = 1;
 	gtk_list_store_insert_with_values(model, NULL, -1,
 					DATE_C, date_ptr,
 					PERSON_C, person_ptr,
@@ -379,6 +406,13 @@ int main(int argc, char **argv)
 	GtkTreeViewColumn *column, *column1, *column2, *column3;
 	GtkListStore *model;
 	GtkTreeModel *filter;
+
+	printf("size of double: %zu\nsize of gdouble %zu\nsize of int: %zu\n"
+			"size of unsigned int: %zu\nsize of long: %zu\n"
+			"size of unsigned long %zu\n"
+			,sizeof(double),sizeof(gdouble),sizeof(int),sizeof(unsigned int)
+			,sizeof(long),sizeof(unsigned long));
+
 
 	/* Init GTK */
 	gtk_init(&argc,&argv);
@@ -487,13 +521,13 @@ int main(int argc, char **argv)
 	/* Create liststore for table */
 	model = gtk_list_store_new(
 		TOTAL_COLUMNS,  /* required parameter, total columns */
-		G_TYPE_STRING,  /* Second column, date, DATE_C */
-		G_TYPE_STRING,  /* Third column, person, PERSON_C */
-		G_TYPE_STRING,  /* Fourth column, payment method, PAYMENT_METHOD_C */
-		G_TYPE_DOUBLE,  /* Fifth column, amount, AMOUNT_C */
-		G_TYPE_UINT,   /* Sixth column, year, YEAR_C */
-		G_TYPE_UCHAR,   /* Seventh column, month, MONTH_C */
-		G_TYPE_UCHAR,   /* Eight column, day, DAY_C */
+		G_TYPE_STRING,  /* 0th column, date, DATE_C */
+		G_TYPE_STRING,  /* first column, person, PERSON_C */
+		G_TYPE_STRING,  /* second column, payment method, PAYMENT_METHOD_C */
+		G_TYPE_DOUBLE,  /* third column, amount, AMOUNT_C */
+		G_TYPE_UINT,   /* fourth column, year, YEAR_C */
+		G_TYPE_UCHAR,   /* fifth column, month, MONTH_C */
+		G_TYPE_UCHAR,   /* sixth column, day, DAY_C */
 		G_TYPE_BOOLEAN  /* 1 for show, 0 for hide */
 		);
 
@@ -645,6 +679,43 @@ int main(int argc, char **argv)
 	error_widget = gtk_text_view_new_with_buffer(error_buffer);
 	gtk_text_buffer_set_text(error_buffer," ",-1);
 	gtk_box_pack_start (GTK_BOX (box), error_widget, 0, 0, 0);
+
+	printf("Fee adder 0.1\n");
+	
+	if(check_endianness() == IS_BIG_ENDIAN) {
+		gtk_text_buffer_set_text(error_buffer,"Computer should be litte endian, please exit to avoid data issues\n",-1);	
+		fprintf(stderr,"Computer should be little endian, please exit to avoid data issues\n");	
+
+	}
+	if (sizeof(void *) != 8) {
+		gtk_text_buffer_set_text(error_buffer,"Error: please use a 64-bit computer, please exit to avoid data issues\n",-1);
+		fprintf(stderr,"Error: please use a 64-bit computer, please exit to avoid data issues\n");
+        }
+	/* warn if compiler didn't create correct length for types */
+	if(sizeof(double) != 8) {
+		gtk_text_buffer_set_text(error_buffer,"size of double must equal 8, please exit to avoid data issues\n",-1);	
+		fprintf(stderr,"size of double must equal 8, please exit to avoid data issues\n");	
+	}
+	if(sizeof(gdouble) != 8) {
+		gtk_text_buffer_set_text(error_buffer,"size of gdouble must equal 8, please exit to avoid data issues\n",-1);	
+		fprintf(stderr,"size of gdouble must equal 8, please exit to avoid data issues\n");	
+	}
+	if(sizeof(unsigned int) != 4) {
+		gtk_text_buffer_set_text(error_buffer,"size of unsigned int must equal 4, please exit to avoid data issues\n",-1);	
+		fprintf(stderr,"size of unsigned int must equal 4, please exit to avoid data issues\n");	
+	}
+	if(sizeof(int) != 4) {
+		gtk_text_buffer_set_text(error_buffer,"size of int must equal 4, please exit to avoid data issues\n",-1);	
+		fprintf(stderr,"size of int must equal 4, please exit to avoid data issues\n");	
+	}
+	if(sizeof(long) != 8) {
+		gtk_text_buffer_set_text(error_buffer,"size of long must equal 8, please exit to avoid data issues\n",-1);
+		fprintf(stderr,"size of long must equal 8, please exit to avoid data issues\n");
+	}
+	if(sizeof(unsigned long) != 8) {
+		gtk_text_buffer_set_text(error_buffer,"size of unsigned long must equal 8, please exit to avoid data issues\n",-1);	
+		fprintf(stderr,"size of unsigned long must equal 8, please exit to avoid data issues\n");	
+	}
 
 	/* After clicking add, call 'do_add' function */
 	g_signal_connect(add_button,"clicked",G_CALLBACK(do_add),model);
