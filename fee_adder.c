@@ -308,11 +308,11 @@ unsigned char load_items(GtkListStore *model)
 	unsigned long current_line = 0;
 	FILE *the_file;
 	char * retval;
-	the_file = fopen(filename,"r");
 	size_t line_length;
 	char line[MAX_DAY_CHARS + MAX_MONTH_CHARS + MAX_YEAR_CHARS +
 		 MAX_METHOD_CHARS + MAX_PERSON_CHARS + MAX_AMOUNT_CHARS + 20];
 	char finished_message[FILENAME_SIZE + 35] = {0};
+	char error_message[FILENAME_SIZE + 35] = {0};
 	char *newline_location;
 	char *endptr;
 	char *token;
@@ -325,6 +325,17 @@ unsigned char load_items(GtkListStore *model)
 	unsigned int year;
 	char *person_s;
 	char *method_s;
+
+	snprintf(error_message,sizeof(error_message),"Cannot open file at: %s",filename);
+
+	errno = 0;
+	the_file = fopen(filename,"r");
+	if(!the_file) {
+		perror("");
+		fprintf(stderr,"%s\n",error_message);
+		gtk_text_buffer_set_text(error_buffer,error_message,-1);
+	  	return FAILURE;
+	}
 
 	snprintf(finished_message,sizeof(finished_message),"Finished loading file at: %s",filename);
 
@@ -610,6 +621,7 @@ void save_items(GtkWidget *widget, gpointer model_void) {
 	GtkTreeModel *model = (GtkTreeModel *)model_void;
 	GtkTreeIter iter;
 	char save_message[FILENAME_SIZE + 20] = {0};
+	char error_message[FILENAME_SIZE + 40] = {0};
 	/*year*/
 	guint gyear_s;
 	unsigned int year_s;
@@ -630,7 +642,16 @@ void save_items(GtkWidget *widget, gpointer model_void) {
 	double item_amount;
 	FILE *the_file;
 
+	snprintf(error_message,sizeof(error_message),"Cannot create or open file at %s",filename);
+
+	errno = 0;
 	the_file = fopen(filename,"w+");
+	if(!the_file) {
+		perror("");
+		fprintf(stderr,"%s\n",error_message);
+		gtk_text_buffer_set_text(error_buffer,error_message,-1);
+	  	return;
+	}
 	snprintf(save_message,sizeof(save_message),"File saved at %s",filename);
 	fprintf(the_file,"Day,Month,Year,Customer,Method,Amount\n");
 
