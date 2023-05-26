@@ -11,18 +11,26 @@
 #include <gtk/gtk.h>
 #include <limits.h>
 #include <string.h>
+#include <errno.h>
 #define _ISOC99_SOURCE 
 #include <math.h>
 #define MAX_ENTRIES 100000 /* unused */
-#define MAX_DATE_CHARS 21 /* adjustable, includes \0 */ 
-#define MAX_METHOD_CHARS 21 /* adjustable, includes \0 */ 
-#define MAX_PERSON_CHARS 101 /* adjustable, includes \0 */
+#define MAX_DATE_CHARS 21 /* adjustable, includes '\0' */ 
+#define MAX_METHOD_CHARS 21 /* adjustable, includes '\0' */ 
+#define MAX_PERSON_CHARS 101 /* adjustable, includes '\0' */
 #define MAX_AMOUNT_CHARS 15 /* double has a precision of 18
 			     * so this limits that and also large numbers */
 #define FILENAME_SIZE 250 /* adjustable */
+#define MAX_YEAR_CHARS 6 /* cannot exceed number of digits of MAX_YEAR_NUMBER + 1 or '\0' */
+#define MAX_DAY_CHARS 4 /* cannot exceed number of digits of MAX_DAY_NUMBER + 1 for '\0' */
+#define MAX_MONTH_CHARS 4 /* cannot exceed number of digits of MAX_MONTH_NUMBER + 1 for '\0' */
+#define MAX_DAY_NUMBER 254 /* cannot exceed UCHAR_MAX, MAX_DAY_CHARS is number of digits of this + 1 for '\0' */
+#define MAX_MONTH_NUMBER 254 /* cannot exceed UCHAR_MAX, MAX_MONTH_CHARS is number of digits of this + 1 for '\0' */
+#define MAX_YEAR_NUMBER 65534 /* cannot exceed UINT_MAX, MAX_YEAR_CHARS is number of digits of this + 1 for '\0' */
 
 /* enums */
-enum exit_codes {SUCCESS,FAILURE};
+enum exit_codes {SUCCESS,FAILURE,UNFINISHED};
+enum status {NONE, START, FINISH};
 enum columns {DATE_C, PERSON_C, PAYMENT_METHOD_C, AMOUNT_C, YEAR_C, MONTH_C, DAY_C, SHOW_C, TOTAL_COLUMNS};
 enum endianness {IS_BIG_ENDIAN,IS_LITTLE_ENDIAN};
 
@@ -55,6 +63,240 @@ check_endianness(void)
 
 }
 
+char * strsep_custom(char **str,char delim) {
+
+        char *save = *str;
+        if(!(**str)) {
+                return NULL;
+        }
+        *str = strchr(*str,delim);
+        if(!(*str)) {
+                return save;
+                *str = NULL;
+        }
+        **str = 0;
+        (*str)++;
+        return save;
+}
+
+unsigned char load_items(void)
+{
+
+	unsigned long current_line = 0;
+	FILE *the_file;
+	int retval;
+	the_file = fopen(filename,"r");
+	size_t line_length;
+	char line[MAX_DAY_CHARS + MAX_MONTH_CHARS + MAX_YEAR_CHARS +
+		 MAX_METHOD_CHARS + MAX_PERSON_CHARS + MAX_AMOUNT_CHARS + 20];
+	char finished_message[FILENAME_SIZE + 35] = {0};
+	char *newline_location;
+	char *endptr;
+	char *token;
+	char *end;
+	unsigned long number;
+	unsigned char day;
+	unsigned char month;
+	unsigned int year;
+	char *person_s;
+
+	snprintf(finished_message,sizeof(finished_message),"Finished loading file at: %s",filename);
+
+	for(;current_line < ULONG_MAX;current_line++) {
+
+		memset(line,0,sizeof(line));
+		errno = 0;
+		retval = fgets(line,sizeof(line),the_file);
+		if(!retval) {
+			if(ferror(the_file)) {
+				perror("Couldn't fully load file: ");
+				gtk_text_buffer_set_text(error_buffer,"Couldn't fully load file, "
+						"fatal error, should exit program",-1);
+				fclose(the_file);
+				return UNFINISHED;
+			} else if(feof(the_file)) {
+				//SUCESSS !
+				gtk_text_buffer_set_text(error_buffer,finished_message,-1);
+				break;
+			} else {
+				fprintf(stderr,"Couldn't fully load file, unknown error, should exit program\n");
+				gtk_text_buffer_set_text(error_buffer,"Couldn't fully load file, "
+						"unknown error, should exit program",-1);
+				fclose(the_file);
+				return UNFINISHED;
+			}
+		}
+		newline_location = strchr(line,'\n');
+		if(!newline_location) {
+			fprintf(stderr,"No newline at end of line %lu\n",current_line);
+			gtk_text_buffer_set_text(error_buffer,"No newline at end of .csv line."
+					"  File is corrupted, please check file",-1);
+			fclose(the_file);
+			return UNFINISHED;
+		}
+		/* init strsep variable to beginning of scanned line from file */
+		end = line;
+		/* get day from file ----------------------------------------------------------------- */
+		/* run strsetp */
+		token = strsep_custom(&end,',');
+		/* if no ending comma for day field */
+		if(!end) {
+			fprintf(stderr,"Missing comma on line %lu\n",current_line);
+			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma.
+				      	File is corrupted, please check file",-1);
+			fclose(the_file);
+			return UNFINISHED;
+		}
+		/* if day csv field is empty, return */
+		if(!(*token)) {
+			fprintf(stderr,"Missing day on line %lu\n",current_line);
+			gtk_text_buffer_set_text(error_buffer,".csv file is missing day.
+				      	File is corrupted, please check file",-1);
+			fclose(the_file);
+			return UNFINISHED;
+		}
+		number = stroul(token,&endptr,10);
+		if(endptr == token || (validate_day(&number) == FAILURE) || *endptr != '\0') {
+			fprintf(stderr,"Missing day on line %lu\n",current_line);
+			gtk_text_buffer_set_text(error_buffer,".csv file is missing day.
+				      	File is corrupted, please check file",-1);
+			fclose(the_file);
+			return UNFINISHED;
+		}
+		day = (unsigned char) number;
+		/* get month from file ------------------------------------------------ */
+		token = strsep_custom(&end,',');
+		/* if null character after last valid csv field, return */
+		if(!token) {
+			fprintf(stderr,".csv ended prematurely on line %lu, file is corrupted\n",current_line);
+			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma.
+				      	File is corrupted, please exit program and check file",-1);
+			fclose(the_file);
+			return UNFINISHED;
+		}
+		/* if no ending comma for month field */
+		if(!end) {
+			fprintf(stderr,"Missing comma on line %lu\n",current_line);
+			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma.
+				      	File is corrupted, please check file",-1);
+			fclose(the_file);
+			return UNFINISHED;
+		}
+		/* if month csv field is empty, return */
+		if(!(*token)) {
+			fprintf(stderr,"Missing month on line %lu\n",current_line);
+			gtk_text_buffer_set_text(error_buffer,".csv file is missing month.
+				      	File is corrupted, please check file",-1);
+			fclose(the_file);
+			return UNFINISHED;
+		}
+		number = stroul(token,&endptr,10);
+		if(endptr == token || (validate_month(&number) == FAILURE) || *endptr != '\0') {
+			fprintf(stderr,"Missing month on line %lu\n",current_line);
+			gtk_text_buffer_set_text(error_buffer,".csv file is missing month.
+				      	File is corrupted, please check file",-1);
+			fclose(the_file);
+			return UNFINISHED;
+		}
+		month = (unsigned char) number;
+		/* get year from file ------------------------------------------------- */
+		token = strsep_custom(&end,',');
+		/* if null character after last valid csv field, return */
+		if(!token) {
+			fprintf(stderr,".csv ended prematurely on line %lu, file is corrupted\n",current_line);
+			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma.
+				      	File is corrupted, please exit program and check file",-1);
+			fclose(the_file);
+			return UNFINISHED;
+		}
+		/* if no ending comma for year field */
+		if(!end) {
+			fprintf(stderr,"Missing comma on line %lu\n",current_line);
+			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma.
+				      	File is corrupted, please check file",-1);
+			fclose(the_file);
+			return UNFINISHED;
+		}
+		/* if year csv field is empty, return */
+		if(!(*token)) {
+			fprintf(stderr,"Missing year on line %lu\n",current_line);
+			gtk_text_buffer_set_text(error_buffer,".csv file is missing year.
+				      	File is corrupted, please check file",-1);
+			fclose(the_file);
+			return UNFINISHED;
+		}
+		number = stroul(token,&endptr,10);
+		if(endptr == token || (validate_year(&number) == FAILURE) || *endptr != '\0') {
+			fprintf(stderr,"Missing year on line %lu\n",current_line);
+			gtk_text_buffer_set_text(error_buffer,".csv file is missing year.
+				      	File is corrupted, please check file",-1);
+			fclose(the_file);
+			return UNFINISHED;
+		}
+		year = (unsigned int) number;
+		/* get person from file --------------------------------------------------------------- */
+		token = strsep_custom(&end,',');
+		/* if null character after last valid csv field, return */
+		if(!token) {
+			fprintf(stderr,".csv ended prematurely on line %lu, file is corrupted\n",current_line);
+			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma.
+				      	File is corrupted, please exit program and check file",-1);
+			fclose(the_file);
+			return UNFINISHED;
+		}
+		/* if no ending comma for person field */
+		if(!end) {
+			fprintf(stderr,"Missing comma on line %lu\n",current_line);
+			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma.
+				      	File is corrupted, please check file",-1);
+			fclose(the_file);
+			return UNFINISHED;
+		}
+		/* if empty person csv field, or person string doesn't validate, return */
+		if(validate_person(token) == FAILURE) {
+			fprintf(stderr,"Cannot parse person on %lu\n",current_line);
+			gtk_text_buffer_set_text(error_buffer,".csv file is missing properly formatted person.
+				      	File is corrupted, please check file",-1);
+			fclose(the_file);
+			return UNFINISHED;
+		}
+		person_s = token;
+		/* get method from file ------------------------------------------ */ 
+		token = strsep_custom(&end,',');
+		/* if null character after last valid csv field, return */
+		if(!token) {
+			fprintf(stderr,".csv ended prematurely on line %lu, file is corrupted\n",current_line);
+			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma.
+				      	File is corrupted, please exit program and check file",-1);
+			fclose(the_file);
+			return UNFINISHED;
+		}
+		/* if no ending comma for method field */
+		if(!end) {
+			fprintf(stderr,"Missing comma on line %lu\n",current_line);
+			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma.
+				      	File is corrupted, please check file",-1);
+			fclose(the_file);
+			return UNFINISHED;
+		}
+		/* if method is non empty, ie there isn't ,, in csv */
+		if(*token) {
+			if(validate_method(token) == FAILURE) {
+				fprintf(stderr,"Cannot parse person on %lu\n",current_line);
+				gtk_text_buffer_set_text(error_buffer,".csv file is missing properly formatted person.
+						File is corrupted, please check file",-1);
+				fclose(the_file);
+				return UNFINISHED;
+			method_s = token;
+		} /* else just keep method an empty string and put an empty string in liststore */
+
+		printf("read line of csv\n");
+
+	} /* end of for loop reading file */
+	fclose(the_file);
+
+
+}
 /* TODO check error on library functions and handle accordingly */
 void save_items(GtkWidget *widget, gpointer model_void) {
 	GtkTreeModel *model = (GtkTreeModel *)model_void;
@@ -82,6 +324,7 @@ void save_items(GtkWidget *widget, gpointer model_void) {
 
 	the_file = fopen(filename,"w+");
 	snprintf(save_message,sizeof(save_message),"File saved at %s",filename);
+	fprintf(the_file,"Day,Month,Year,Customer,Method,Amount\n");
 
 	if(gtk_tree_model_get_iter_first(model,&iter) == FALSE) {
 		gtk_text_buffer_set_text(error_buffer,save_message,-1);
@@ -248,19 +491,23 @@ unsigned char validate_amount(char *str, double *number)
 unsigned char validate_person(char *text)
 {
 	if(!strlen(text)) {
+		fprintf(stderr,"Please enter a person\n");
 		gtk_text_buffer_set_text(error_buffer,"Please enter a person",-1);
 		return FAILURE;
 	}
 	if(strlen(text) > MAX_PERSON_CHARS - 1)  {
+		fprintf(stderr,"Name of person is too long\n");
 		gtk_text_buffer_set_text(error_buffer,"Name of person is too long, "
 				"recompile to allow longer person names",-1);
 		return FAILURE;
 	}
 	if(strchr(text,',')) {
+		fprintf(stderr,"Customer name cannot contain commas\n");
 		gtk_text_buffer_set_text(error_buffer,"Customer name cannot contain commas",-1);
 		return FAILURE;
 	}
 	if(strchr(text,'\n')) {
+		fprintf(stderr,"Customer name cannot contain newlines\n");
 		gtk_text_buffer_set_text(error_buffer,"Customer name cannot contain newlines",-1);
 		return FAILURE;
 	}
@@ -284,7 +531,24 @@ unsigned char validate_method(char *text)
 	}
 	return SUCCESS;
 }
-
+unsigned char validate_day(unsigned long *number) 
+{
+	if(*number < 0 || *number > MAX_DAY_NUMBER)
+		return FAILURE;
+	return SUCCESS;
+}
+unsigned char validate_month(unsigned long *number)
+{
+	if(*number < 0 || *number > MAX_MONTH_NUMBER)
+		return FAILURE;
+	return SUCCESS;
+}
+unsigned char validate_year(unsigned long *number)
+{
+	if(*number < 0 || *number > MAX_YEAR_NUMBER)
+		return FAILURE;
+	return SUCCESS;
+}
 unsigned char validate_date (char *text, unsigned int *year_s, unsigned char *month_s, unsigned char *day_s)
 {
 	unsigned long number;
@@ -308,7 +572,7 @@ unsigned char validate_date (char *text, unsigned int *year_s, unsigned char *mo
 	}
 	/* find day */
 	number = strtoul(text,&endptr,10);
-	if(endptr == text || number < 0 || number > 32 || *endptr != '/') {
+	if(endptr == text || *endptr != '/' || (validate_day(&number) == FAILURE)) {
 		gtk_text_buffer_set_text(error_buffer,"Invalid date, must be in dd/mm/yy format",-1);
 		return FAILURE;
 	}
@@ -316,7 +580,7 @@ unsigned char validate_date (char *text, unsigned int *year_s, unsigned char *mo
 	text = endptr + 1;
 	/* find month */
 	number = strtoul(text,&endptr,10);
-	if(endptr == text || number < 0 || number > 13 || *endptr != '/') {
+	if(endptr == text || *endptr != '/' || (validate_month(&number) == FAILURE)) {
 		gtk_text_buffer_set_text(error_buffer,"Invalid date, must be in dd/mm/yy format",-1);
 		return FAILURE;
 	}
@@ -324,7 +588,7 @@ unsigned char validate_date (char *text, unsigned int *year_s, unsigned char *mo
 	text = endptr + 1;
 	/* find year */
 	number = strtoul(text,&endptr,10);
-	if((endptr == text || number < 0 || number > 65534) && !(*endptr == '\0' || *endptr == ' ')) {
+	if(endptr == text || (validate_year(&number) == FAILURE) || !(*endptr == '\0' || *endptr == ' ')) {
 		gtk_text_buffer_set_text(error_buffer,"Invalid date, must be in dd/mm/yy format",-1);
 		return FAILURE;
 	}
