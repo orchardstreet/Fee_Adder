@@ -238,7 +238,71 @@ char * strsep_custom(char **str,char delim) {
         return save;
 }
 
-unsigned char load_items(void)
+unsigned char truncate_double(double *temp_double)
+{
+
+	char string_from_double[50] = {0};
+	char *endptr;
+
+	snprintf(string_from_double,sizeof(string_from_double),"%.2lf",*temp_double);
+	printf("what snprintf produced trying to convert double to string: %s\n",string_from_double);
+	*temp_double = strtod(string_from_double,&endptr);
+	if(endptr == string_from_double) {
+		gtk_label_set_text( GTK_LABEL(total_results_label), "error");
+		gtk_label_set_text( GTK_LABEL(total_filtered_results_label), "error");
+		gtk_text_buffer_set_text(error_buffer,"snprintf() outputting garbage",-1);
+		fprintf(stderr,"can't convert to double from snprintf created string\n" 
+				"snprintf() outputting garbage\n");
+		return FAILURE;
+	}
+	return SUCCESS;
+
+}
+unsigned char add_all_rows(GtkTreeModel *model)
+{
+	/* first parameter of this function is accepting our base GtkListStore cast to a GtkTreeModel */
+	GtkTreeIter iter;
+	gboolean is_visible;
+	gdouble gitem_amount;
+	char string_from_double[50] = {0};
+	double item_amount = 0;
+	/* set globally defined totals to 0, because we are re-counting everything in the liststore */
+	amount_total = 0;
+	filtered_amount_total = 0;
+
+	if(gtk_tree_model_get_iter_first(model,&iter) == FALSE) {
+		gtk_label_set_text( GTK_LABEL(total_results_label), "0");
+		gtk_label_set_text( GTK_LABEL(total_filtered_results_label), "0");
+		return SUCCESS;
+	}
+
+	do {
+		gtk_tree_model_get(model, &iter, SHOW_C,&is_visible,-1); 
+		gtk_tree_model_get(model, &iter, AMOUNT_C, &gitem_amount, -1);
+		item_amount = (double) gitem_amount;
+		printf("item amount: %lf\n",item_amount);
+		/* truncate double the same way we do the rest of the program, so totals make sense */
+		/* ie with the %.2lf snprintf/sprintf format specifier */
+		if(truncate_double(&item_amount) == FAILURE)
+			return FAILURE;
+		if(is_visible)
+			filtered_amount_total += item_amount;
+		amount_total += item_amount;
+
+	} while(gtk_tree_model_iter_next(model,&iter));
+
+	printf("filtered total paid: %lf\n",filtered_amount_total);
+	printf("total paid: %lf\n",amount_total);
+	snprintf(string_from_double,50,"%.2lf",amount_total);
+	gtk_label_set_text(GTK_LABEL(total_results_label), string_from_double);
+	snprintf(string_from_double,50,"%.2lf",filtered_amount_total);
+	gtk_label_set_text(GTK_LABEL(total_filtered_results_label), string_from_double);
+
+	return SUCCESS;
+
+}
+
+unsigned char load_items(GtkListStore *model)
 {
 
 	unsigned long current_line = 0;
@@ -255,6 +319,7 @@ unsigned char load_items(void)
 	char *end;
 	unsigned long number;
 	double amount_s;
+	char date_s[MAX_DATE_CHARS] = {0};
 	unsigned char day;
 	unsigned char month;
 	unsigned int year;
@@ -516,12 +581,26 @@ unsigned char load_items(void)
 			return UNFINISHED;
 		}
 		printf("amount: %lf\n",amount_s);
+
+		snprintf(date_s,sizeof(date_s),"%u/%u/%u",day,month,year);
+
+		gtk_list_store_insert_with_values(model, NULL, -1,
+						DATE_C, date_s,
+						PERSON_C, person_s,
+						PAYMENT_METHOD_C, method_s,
+						AMOUNT_C, amount_s,
+						YEAR_C, year,
+						MONTH_C, month,
+						DAY_C, day,
+						SHOW_C, 1, /* 1 for, yes show in tree */
+						-1);
 		printf("processed a line of csv successfully\n");
 
 	} /* end of for loop reading file */
 
-	printf("success in parsing entire file! :)\n");
 	fclose(the_file);
+	printf("success in parsing entire file! :)\n");
+	add_all_rows(GTK_TREE_MODEL(model));
 	return SUCCESS;
 
 }
@@ -590,70 +669,6 @@ void save_items(GtkWidget *widget, gpointer model_void) {
 
 	fclose(the_file);
 	gtk_text_buffer_set_text(error_buffer,save_message,-1);
-
-}
-
-unsigned char truncate_double(double *temp_double)
-{
-
-	char string_from_double[50] = {0};
-	char *endptr;
-
-	snprintf(string_from_double,sizeof(string_from_double),"%.2lf",*temp_double);
-	printf("what snprintf produced trying to convert double to string: %s\n",string_from_double);
-	*temp_double = strtod(string_from_double,&endptr);
-	if(endptr == string_from_double) {
-		gtk_label_set_text( GTK_LABEL(total_results_label), "error");
-		gtk_label_set_text( GTK_LABEL(total_filtered_results_label), "error");
-		gtk_text_buffer_set_text(error_buffer,"snprintf() outputting garbage",-1);
-		fprintf(stderr,"can't convert to double from snprintf created string\n" 
-				"snprintf() outputting garbage\n");
-		return FAILURE;
-	}
-	return SUCCESS;
-
-}
-unsigned char add_all_rows(GtkTreeModel *model)
-{
-	/* first parameter of this function is accepting our base GtkListStore cast to a GtkTreeModel */
-	GtkTreeIter iter;
-	gboolean is_visible;
-	gdouble gitem_amount;
-	char string_from_double[50] = {0};
-	double item_amount = 0;
-	/* set globally defined totals to 0, because we are re-counting everything in the liststore */
-	amount_total = 0;
-	filtered_amount_total = 0;
-
-	if(gtk_tree_model_get_iter_first(model,&iter) == FALSE) {
-		gtk_label_set_text( GTK_LABEL(total_results_label), "0");
-		gtk_label_set_text( GTK_LABEL(total_filtered_results_label), "0");
-		return SUCCESS;
-	}
-
-	do {
-		gtk_tree_model_get(model, &iter, SHOW_C,&is_visible,-1); 
-		gtk_tree_model_get(model, &iter, AMOUNT_C, &gitem_amount, -1);
-		item_amount = (double) gitem_amount;
-		printf("item amount: %lf\n",item_amount);
-		/* truncate double the same way we do the rest of the program, so totals make sense */
-		/* ie with the %.2lf snprintf/sprintf format specifier */
-		if(truncate_double(&item_amount) == FAILURE)
-			return FAILURE;
-		if(is_visible)
-			filtered_amount_total += item_amount;
-		amount_total += item_amount;
-
-	} while(gtk_tree_model_iter_next(model,&iter));
-
-	printf("filtered total paid: %lf\n",filtered_amount_total);
-	printf("total paid: %lf\n",amount_total);
-	snprintf(string_from_double,50,"%.2lf",amount_total);
-	gtk_label_set_text(GTK_LABEL(total_results_label), string_from_double);
-	snprintf(string_from_double,50,"%.2lf",filtered_amount_total);
-	gtk_label_set_text(GTK_LABEL(total_filtered_results_label), string_from_double);
-
-	return SUCCESS;
 
 }
 
@@ -1056,7 +1071,7 @@ int main(int argc, char **argv)
 		fprintf(stderr,"size of unsigned long must equal 8, please exit to avoid data issues\n");	
 	}
 	/* load items from csv file into liststore, treestore, and treeview */
-	load_items();
+	load_items(model);
 
 	/* After clicking add, call 'do_add' function */
 	g_signal_connect(add_button,"clicked",G_CALLBACK(do_add),model);
