@@ -1,4 +1,4 @@
-Fee Adder
+Payment Manager
 ========================
 
 Accounting program
