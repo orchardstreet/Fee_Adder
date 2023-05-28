@@ -12,11 +12,16 @@ Requirements
 ### Software
 The default gcc on modern systems should work just fine
 
-* A 64-bit, C99 compiler that uses 1 byte for char, 4 bytes for int, and 8 bytes for long long (this is default on modern, 64-bit Linux and Windows systems)
+* A 64-bit, C99 compiler that uses 1 byte for char, 4 bytes for int, and 8 bytes for long long.
 * GTK 3.0 C library
 
 ### Hardware
+Almost every single modern CPU should work great
+
 * 64-bit CPU
+* Memory layout in little-endian format
+
+Program will exit or warn if an incompatible compiler or CPU is used.
 
 Compilation tutorials
 ------------
