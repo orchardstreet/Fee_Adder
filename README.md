@@ -12,7 +12,7 @@ https://github.com/msys2/msys2-installer/releases/download/2023-05-26/msys2-x86_
 
 Click on Windows start menu and type in "mingw64"
 
-Click on "MSYS2 MINGW64", then enter the following in the command line
+Click on "MSYS2 MINGW64", a command line will pop up.   Enter the following in this command line:
 
 ```bash
 wget https://github.com/orchardstreet/fee_adder/archive/refs/heads/master.zip
