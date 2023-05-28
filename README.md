@@ -33,6 +33,7 @@ Click on "Fee_Addr" in the C drive
 Click on "launch-program"
 
 ### Debian-based systems
+Type the following into the command line:
 
 ```bash
 sudo apt install libgtk-3-dev build-essential unzip wget -y
