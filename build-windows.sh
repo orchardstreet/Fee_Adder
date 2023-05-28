@@ -85,7 +85,7 @@ else
   echo "failed"
 fi
 
-#creating launcher script for program in TARGETDIR
+#create launcher script for program in TARGETDIR
 echo -n "Creating launcher script for program..."
 echo 'Set oShell = CreateObject ("Wscript.Shell")
 Dim strArgs
