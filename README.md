@@ -1,20 +1,18 @@
 Payment Manager
 ========================
 
-A simple, open source, graphical accounting program to manage customer payments in any industry.  Written in C, and uses GTK 3.0
+A simple, open source, graphical accounting program to manage customer payments in any industry.  Written in C, and uses the open source GTK 3.0 library for the graphical interface.
 
-It can log payments to hard disk, present filtered and grand totals, and sort customer payments by various parameters.  The program logs the date, customer, method, and amount of each payment.
+This program can log payments to hard disk, present filtered and grand totals, and sort customer payments by various parameters.  The program logs the date, customer, method, and amount of each payment.
 
 Unlike most Excel solutions, the program tries to prevent a user from entering unsortable data.  Also unlike Excel, the default save format is an easy-to-read .csv file, which is also compatible with Excel, LibreOffice Calc etc.
-
-The only dependencies are any modern C standard library which supports C99 and the open source GTK library for the GUI.  Windows compilation is of course more involved than Linux and will require the open source MYS2
 
 Requirements
 ------------
 ###Software
 tl;dr default gcc on modern systems should work just fine
 
-* A 64-bit, C99 compiler compiler that uses 1 byte for char, 4 bytes for int, and 8 bytes for long long (this is default on modern, 64-bit Linux and Windows systems)
+* A 64-bit, C99 compiler that uses 1 byte for char, 4 bytes for int, and 8 bytes for long long (this is default on modern, 64-bit Linux and Windows systems)
 * GTK 3.0 C library
 
 ###Hardware
