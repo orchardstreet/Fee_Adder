@@ -46,7 +46,7 @@ cd fee_adder-master
 
 chmod +x compile.sh
 
-./compile
+./compile.sh
 
 ./fee_adder
 ```
