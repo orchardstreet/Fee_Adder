@@ -1,7 +1,7 @@
 Payment Manager
 ========================
 
-A simple, open source, graphical accounting program to manage customer payments in any industry.  Written in C, and uses the open source GTK 3.0 library for the graphical interface.
+A simple, open source, graphical accounting program for tracking customer payments in any industry.  Written in C, and uses the open source GTK 3.0 library for the graphical interface.
 
 This program can log payments to hard disk, present filtered and grand totals, and sort customer payments by various parameters.  The program logs the date, customer, method, and amount of each payment.
 
