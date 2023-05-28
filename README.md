@@ -10,7 +10,7 @@ Unlike most Excel solutions, the program tries to prevent a user from entering u
 Requirements
 ------------
 ### Software
-tl;dr default gcc on modern systems should work just fine
+The default gcc on modern systems should work just fine
 
 * A 64-bit, C99 compiler that uses 1 byte for char, 4 bytes for int, and 8 bytes for long long (this is default on modern, 64-bit Linux and Windows systems)
 * GTK 3.0 C library
