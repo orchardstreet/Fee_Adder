@@ -21,6 +21,8 @@ unzip master.zip
 
 cd fee_adder-master
 
+chmod +x build-windows.sh
+
 ./build-windows.sh
 ```
 
