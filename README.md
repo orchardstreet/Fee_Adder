@@ -3,7 +3,7 @@ Fee Adder
 
 Accounting program
 
-Installation
+Compilation
 ------------
 ### Windows 11
 Download msys2 building platform from https://www.msys2.org or from the following direct link:
@@ -47,14 +47,7 @@ cd fee_adder-master
 chmod +x compile.sh
 
 ./compile
-```
 
-Usage
------------
-
-### Run 
-
-```bash
 ./fee_adder
 ```
 
