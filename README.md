@@ -12,7 +12,7 @@ Requirements
 ### Software
 The default gcc on modern systems should work just fine
 
-* A 64-bit, C99 compiler that uses 1 byte for char, 4 bytes for int, and 8 bytes for long long.
+* A 64-bit, C99 compiler
 * GTK 3.0 C library
 
 ### Hardware
