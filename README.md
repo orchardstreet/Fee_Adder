@@ -58,9 +58,9 @@ unzip master.zip
 
 cd Payment_Manager-master
 
-chmod +x compile.sh
+chmod +x build-linux.sh
 
-./compile.sh
+./build-linux.sh
 
 ./payment_manager
 ```
