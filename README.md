@@ -27,7 +27,7 @@ Click on the start menu item named "MSYS2 MINGW64".  A command line will pop up.
 ```bash
 pacman -Syu
 
-pacman -S unzip mingw-w64-x86_64-toolchain nano base-devel mingw-w64-x86_64-gtk3
+pacman -S unzip mingw-w64-x86_64-toolchain vim base-devel mingw-w64-x86_64-gtk3
 
 wget https://github.com/orchardstreet/Payment_Manager/archive/refs/heads/master.zip
 
