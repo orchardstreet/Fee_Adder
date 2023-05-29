@@ -32,7 +32,7 @@ https://github.com/msys2/msys2-installer/releases/download/2023-05-26/msys2-x86_
 
 Click on Windows start menu and type in "mingw64"
 
-Click on "MSYS2 MINGW64", a command line will pop up.   Enter the following in this command line. Answer 'y' to prompts which ask for yes or no. Press "enter" on prompts that ask for a number selection.:
+Click on "MSYS2 MINGW64", a command line will pop up.   Enter the following in this command line. Answer 'y' to prompts which ask for yes or no. Press "enter" on prompts that ask for a number selection.
 
 ```bash
 pacman -Syu
