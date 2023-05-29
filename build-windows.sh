@@ -45,11 +45,11 @@ echo "finished"
 # copy app dependency library to TARGETDIR/bin
 echo -n "Copy app dependency library..."
 ldd "${TARGETDIR}/bin/payment_manager.exe" | grep "$MSYSTEM_PREFIX\/bin\/.*dll" -o | xargs -I{} cp -f "{}" "${TARGETDIR}/bin/"
-ldd $MSYSTEM_PREFIX/bin/libjson-glib-1.0-0.dll | grep "$MSYSTEM_PREFIX\/bin\/.*dll" -o | xargs -I{} cp -f "{}" "${TARGETDIR}/bin/"
+#ldd $MSYSTEM_PREFIX/bin/libjson-glib-1.0-0.dll | grep "$MSYSTEM_PREFIX\/bin\/.*dll" -o | xargs -I{} cp -f "{}" "${TARGETDIR}/bin/"
 
-cp -f $MSYSTEM_PREFIX/bin/librsvg-2-2.dll "${TARGETDIR}/bin/"
-cp -f $MSYSTEM_PREFIX/bin/libgthread-2.0-0.dll "${TARGETDIR}/bin/"
-cp -f $MSYSTEM_PREFIX/bin/libgmp-10.dll "${TARGETDIR}/bin/"
+#cp -f $MSYSTEM_PREFIX/bin/librsvg-2-2.dll "${TARGETDIR}/bin/"
+#cp -f $MSYSTEM_PREFIX/bin/libgthread-2.0-0.dll "${TARGETDIR}/bin/"
+#cp -f $MSYSTEM_PREFIX/bin/libgmp-10.dll "${TARGETDIR}/bin/"
 echo "finished"
 
 # copy GDBus/GSpawn-helper and dependencies files to TARGETDIR/bin
