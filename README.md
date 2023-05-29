@@ -14,7 +14,6 @@ The default gcc and C standard library on modern systems should work just fine
 * A 64-bit, C99 compiler
 * A modern C standard library
 * GTK 3.0 C library
-* Memory layout in little-endian format
 
 Compilation Tutorials
 ------------
