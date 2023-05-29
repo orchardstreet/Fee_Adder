@@ -7,15 +7,17 @@ This program can log payments to hard disk, present filtered and grand totals, a
 
 Unlike most Excel solutions, the program tries to prevent a user from entering unsortable data.  Also unlike Excel, the default save format is an easy-to-read .csv file, which is also compatible with Excel, LibreOffice Calc etc.
 
-Requirements
+Compilation Requirements
 ------------
 ### Software
-The default gcc on modern systems should work just fine
+The default gcc and C standard library on modern systems should work just fine
 
 * A 64-bit, C99 compiler
+* A modern C standard library
 * GTK 3.0 C library
 
-### Hardware
+Hardware Requirements
+------------
 Almost every single modern CPU should work great
 
 * 64-bit CPU
