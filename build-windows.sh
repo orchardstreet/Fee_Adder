@@ -98,3 +98,20 @@ echo -n "Copying compiled program (payment_manager.exe), necessary dependencies,
 mkdir /c/Payment_Manager
 cp -r $SOURCEDIR/* /c/Payment_Manager
 echo "finished"
+
+echo -n "Creating Desktop shortcut..."
+cd c:/
+wscript.exe Payment_Manager/src/scripts/create-desktop-shortcut.vbs
+echo "finished"
+
+echo -n "Creating folder shortcut..."
+cd c:/
+wscript.exe Payment_Manager/src/scripts/create-folder-shortcut.vbs
+echo "finished"
+
+echo "
+Finished compiling and installing Windows build.  You can find the install folder in the C drive, where the save file (purchase_log.csv) also is.  
+A shortcut was also placed on the desktop.  A replacement Desktop shortcut can be created anytime by double clicking create-dektop-shortcut.vbs
+in the newly created program folder in C:/"
+
+
