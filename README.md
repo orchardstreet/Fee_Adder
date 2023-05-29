@@ -18,7 +18,7 @@ The default gcc and C standard library on modern systems should work just fine
 Compilation Tutorials
 ------------
 ### Windows 11
-Download msys2-x86_64 building platform from https://www.msys2.org and install it by going through the easy install wizard.
+Download msys2-x86_64 open source building platform from https://www.msys2.org and install it by going through the easy install wizard.
 
 After it is installed, click on the Windows start menu search bar and type in "mingw64"
 
