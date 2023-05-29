@@ -14,17 +14,9 @@ The default gcc and C standard library on modern systems should work just fine
 * A 64-bit, C99 compiler
 * A modern C standard library
 * GTK 3.0 C library
-
-Hardware Requirements
-------------
-Almost every single modern CPU should work great
-
-* 64-bit CPU
 * Memory layout in little-endian format
 
-Program will exit or warn if an incompatible compiler or CPU is used.
-
-Compilation tutorials
+Compilation Tutorials
 ------------
 ### Windows 11
 Download msys2 building platform from https://www.msys2.org or from the following direct link:
