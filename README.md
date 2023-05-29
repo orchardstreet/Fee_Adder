@@ -29,7 +29,7 @@ pacman -Syu
 
 pacman -S unzip mingw-w64-x86_64-toolchain nano base-devel mingw-w64-x86_64-gtk3
 
-wget https://github.com/orchardstreet/fee_adder/archive/refs/heads/master.zip
+wget https://github.com/orchardstreet/Payment_Manager/archive/refs/heads/master.zip
 
 unzip master.zip
 
