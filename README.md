@@ -32,14 +32,18 @@ https://github.com/msys2/msys2-installer/releases/download/2023-05-26/msys2-x86_
 
 Click on Windows start menu and type in "mingw64"
 
-Click on "MSYS2 MINGW64", a command line will pop up.   Enter the following in this command line:
+Click on "MSYS2 MINGW64", a command line will pop up.   Enter the following in this command line and answer 'y' to prompts:
 
 ```bash
+pacman -Syu
+
+pacman -S unzip
+
 wget https://github.com/orchardstreet/fee_adder/archive/refs/heads/master.zip
 
 unzip master.zip
 
-cd fee_adder-master
+cd Payment_Manager-master
 
 chmod +x build-windows.sh
 
@@ -58,7 +62,7 @@ Type the following into the command line:
 ```bash
 sudo apt install libgtk-3-dev build-essential unzip wget -y
 
-wget https://github.com/orchardstreet/fee_adder/archive/refs/heads/master.zip
+wget https://github.com/orchardstreet/Payment_Manager/archive/refs/heads/master.zip
 
 unzip master.zip
 
