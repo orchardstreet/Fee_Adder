@@ -52,8 +52,7 @@ chmod +x build-windows.sh
 
 The program folder is now in the C:\ drive at C:\Payment_Manager.
 
-You can launch the program by clicking on the shortcut in that folder or on the Desktop shortcut.  It's recommended to click on these
-shortcuts rather than the main .exe.
+You can launch the program by clicking on the shortcut in that folder named "Payment Manager" or on the Desktop shortcut of the same name.  It's recommended to click on these shortcuts rather than the main .exe file in /windows-build/bin.
 
 ### Debian-based systems
 Type the following into the command line:
