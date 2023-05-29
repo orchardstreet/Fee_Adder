@@ -98,7 +98,7 @@ echo "finished"
 
 echo -n "Creating folder shortcut..."
 cd c:/
-wscript.exe Payment_Manager/src/scripts/create-folder-shortcut.vbs
+wscript.exe Payment_Manager/src/scripts/create-file-shortcut.vbs
 echo "finished"
 
 echo "
