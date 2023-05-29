@@ -50,11 +50,10 @@ chmod +x build-windows.sh
 ./build-windows.sh
 ```
 
-Open Windows file manager and go to the C drive (C:\), this is where your program now resides
+The program folder is now in the C:\ drive at C:\Payment_Manager.
 
-Click on "Fee_Addr" in the C drive
-
-Click on "launch-program"
+You can launch the program by clicking on the shortcut in that folder on the desktop.  It's recommended to click on these
+shortcuts rather than the main .exe.
 
 ### Debian-based systems
 Type the following into the command line:
