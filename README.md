@@ -57,7 +57,7 @@ wget https://github.com/orchardstreet/Payment_Manager/archive/refs/heads/master.
 
 unzip master.zip
 
-cd payment_manager-master
+cd Payment_Manager-master
 
 chmod +x compile.sh
 
