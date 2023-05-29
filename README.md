@@ -18,13 +18,11 @@ The default gcc and C standard library on modern systems should work just fine
 Compilation Tutorials
 ------------
 ### Windows 11
-Download msys2 building platform from https://www.msys2.org or from the following direct link:
+Download msys2-x86_64 building platform from https://www.msys2.org and install it by going through the easy install wizard.
 
-https://github.com/msys2/msys2-installer/releases/download/2023-05-26/msys2-x86_64-20230526.exe
+After it is installed, click on the Windows start menu search bar and type in "mingw64"
 
-Click on Windows start menu and type in "mingw64"
-
-Click on "MSYS2 MINGW64".  A command line will pop up.   Enter the following in this command line. Answer 'y' to prompts which ask for yes or no. Press "enter" on prompts that ask for a number selection.
+Click on the start menu item named "MSYS2 MINGW64".  A command line will pop up.   Enter the following in this command line. Answer 'y' to prompts which ask for yes or no. Press "enter" on prompts that ask for a number selection.
 
 ```bash
 pacman -Syu
