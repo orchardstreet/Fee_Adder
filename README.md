@@ -50,7 +50,7 @@ You can launch the program by clicking on the shortcut in that folder named "Pay
 Type the following into the command line:
 
 ```bash
-sudo apt install libgtk-3-dev build-essential unzip wget -y
+sudo apt update && sudo apt install libgtk-3-dev build-essential unzip wget -y
 
 wget https://github.com/orchardstreet/Payment_Manager/archive/refs/heads/master.zip
 
