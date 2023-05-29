@@ -85,14 +85,6 @@ else
   echo "failed"
 fi
 
-#create launcher script for program in TARGETDIR
-echo -n "Creating launcher script for program..."
-echo 'Set oShell = CreateObject ("Wscript.Shell")
-Dim strArgs
-strArgs = "cmd /c windows-build\bin\payment_manager.exe"
-oShell.Run strArgs, 0, false' > $SOURCEDIR/launch-program.vbs
-echo "finished"
-
 #copy program to C drive (remote dir)
 echo -n "Copying compiled program (payment_manager.exe), necessary dependencies, source, and launcher script to C drive..."
 mkdir /c/Payment_Manager
