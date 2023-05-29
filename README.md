@@ -44,7 +44,7 @@ chmod +x build-windows.sh
 
 The program folder is now completely compiled and installed.  It now resides in the C:\ drive at C:\Payment_Manager.
 
-You can launch the program by clicking on the shortcut in that folder named "Payment Manager" or on the Desktop shortcut of the same name.  It's recommended to click on these shortcuts rather than the main .exe file in /windows-build/bin.   If it works, you can uninstall mysys2 entirely if you want, and the program will work without mysys2.
+You can launch the program by clicking on the shortcut in that folder named "Payment Manager" or on the Desktop shortcut of the same name.  It's recommended to click on these shortcuts rather than the main .exe file in /windows-build/bin.   If it works, you can uninstall msys2 entirely if you want, and the program will work without msys2.
 
 ### Debian-based systems
 Type the following into the command line:
