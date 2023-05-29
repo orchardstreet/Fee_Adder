@@ -37,7 +37,7 @@ Click on "MSYS2 MINGW64", a command line will pop up.   Enter the following in t
 ```bash
 pacman -Syu
 
-pacman -S unzip
+pacman -S unzip mingw-w64-x86_64-toolchain base-devel mingw-w64-x86_64-gtk3
 
 wget https://github.com/orchardstreet/fee_adder/archive/refs/heads/master.zip
 
