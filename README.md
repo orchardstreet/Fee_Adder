@@ -57,12 +57,12 @@ wget https://github.com/orchardstreet/Payment_Manager/archive/refs/heads/master.
 
 unzip master.zip
 
-cd fee_adder-master
+cd payment_manager-master
 
 chmod +x compile.sh
 
 ./compile.sh
 
-./fee_adder
+./payment_manager
 ```
 
