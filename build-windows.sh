@@ -20,9 +20,9 @@ echo "finished"
 
 #delete remote dir if it exists
 echo -n "Remove any previous copy of program on C drive..."
-if [ -d "/c/Fee_Adder" ]; then
+if [ -d "/c/Payment_manager" ]; then
   echo -n "previous program copy present...removing..."
-  rm -r /c/Fee_Adder
+  rm -r /c/Payment_Manager
 fi
 echo "finished"
 
@@ -39,12 +39,12 @@ echo "finished"
 
 # compile program from source and place main executable in TARGETDIR/bin
 echo -n "Compile program and place main .exe in bin folder..."
-gcc src/fee_adder.c -o $TARGETDIR/bin/fee_adder.exe `pkg-config --cflags gtk+-3.0` `pkg-config --libs gtk+-3.0`
+gcc src/payment_manager.c -o $TARGETDIR/bin/payment_manager.exe `pkg-config --cflags gtk+-3.0` `pkg-config --libs gtk+-3.0`
 echo "finished"
 
 # copy app dependency library to TARGETDIR/bin
 echo -n "Copy app dependency library..."
-ldd "${TARGETDIR}/bin/fee_adder.exe" | grep "$MSYSTEM_PREFIX\/bin\/.*dll" -o | xargs -I{} cp -f "{}" "${TARGETDIR}/bin/"
+ldd "${TARGETDIR}/bin/payment_manager.exe" | grep "$MSYSTEM_PREFIX\/bin\/.*dll" -o | xargs -I{} cp -f "{}" "${TARGETDIR}/bin/"
 ldd $MSYSTEM_PREFIX/bin/libjson-glib-1.0-0.dll | grep "$MSYSTEM_PREFIX\/bin\/.*dll" -o | xargs -I{} cp -f "{}" "${TARGETDIR}/bin/"
 
 cp -f $MSYSTEM_PREFIX/bin/librsvg-2-2.dll "${TARGETDIR}/bin/"
@@ -89,12 +89,12 @@ fi
 echo -n "Creating launcher script for program..."
 echo 'Set oShell = CreateObject ("Wscript.Shell")
 Dim strArgs
-strArgs = "cmd /c windows-build\bin\fee_adder.exe"
+strArgs = "cmd /c windows-build\bin\payment_manager.exe"
 oShell.Run strArgs, 0, false' > $SOURCEDIR/launch-program.vbs
 echo "finished"
 
 #copy program to C drive (remote dir)
-echo -n "Copying compiled program (Fee_Adder.exe), necessary dependencies, source, and launcher script to C drive..."
-mkdir /c/Fee_Adder
-cp -r $SOURCEDIR/* /c/Fee_Adder
+echo -n "Copying compiled program (payment_manager.exe), necessary dependencies, source, and launcher script to C drive..."
+mkdir /c/Payment_Manager
+cp -r $SOURCEDIR/* /c/Payment_Manager
 echo "finished"
