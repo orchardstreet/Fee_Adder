@@ -9,7 +9,6 @@ Unlike most Excel solutions, the program tries to prevent a user from entering u
 
 Compilation Requirements
 ------------
-### Software
 The default gcc and C standard library on modern systems should work just fine
 
 * A 64-bit, C99 compiler
