@@ -14,7 +14,6 @@ unsigned char load_items(GtkListStore *model)
 	unsigned long current_line = 0;
 	FILE *the_file;
 	char * retval;
-	size_t line_length;
 	char line[MAX_DAY_CHARS + MAX_MONTH_CHARS + MAX_YEAR_CHARS +
 		 MAX_METHOD_CHARS + MAX_PERSON_CHARS + MAX_AMOUNT_CHARS + 20];
 	char finished_message[FILENAME_SIZE + 35] = {0};
@@ -24,7 +23,7 @@ unsigned char load_items(GtkListStore *model)
 	char *token;
 	char *end;
 	unsigned long number;
-	double amount_s;
+	unsigned long long amount_s;
 	char date_s[MAX_DATE_CHARS] = {0};
 	unsigned char day;
 	unsigned char month;
@@ -297,7 +296,7 @@ unsigned char load_items(GtkListStore *model)
 			fclose(the_file);
 			return UNFINISHED;
 		}
-		printf("amount: %lf\n",amount_s);
+		printf("amount: %llu\n",amount_s);
 
 		snprintf(date_s,sizeof(date_s),"%u/%u/%u",day,month,year);
 
@@ -344,8 +343,9 @@ void save_items(GtkWidget *widget, gpointer model_void) {
 	gchar *gmethod_s;
 	char method_s[MAX_METHOD_CHARS] = {0};
 	/*amount*/
-	gdouble gitem_amount;
-	double item_amount;
+	guint64 gitem_amount;
+	unsigned long long item_amount;
+	char amount_str[MAX_AMOUNT_CHARS] = {0};
 	FILE *the_file;
 
 	snprintf(error_message,sizeof(error_message),"Cannot create or open file at %s",filename);
@@ -387,10 +387,12 @@ void save_items(GtkWidget *widget, gpointer model_void) {
 		g_free(gmethod_s);
 		/*amount*/
 		gtk_tree_model_get(model, &iter, AMOUNT_C, &gitem_amount, -1);
-		item_amount = (double) gitem_amount;
+		item_amount = (unsigned long long) gitem_amount;
+		if(cents_to_string(item_amount,amount_str) == FAILURE) {
+			strcpy(amount_str,"0");
+		}
 
-		fprintf(the_file,"%u,%u,%u,%s,%s,%.2lf\n",day_s,month_s,year_s,name_s,method_s,item_amount);
-
+		fprintf(the_file,"%u,%u,%u,%s,%s,%s\n",day_s,month_s,year_s,name_s,method_s,amount_str);
 	} while(gtk_tree_model_iter_next(model,&iter));
 
 

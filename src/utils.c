@@ -8,6 +8,34 @@ void skip_whitespace(char **text_skip) {
 	for(;**text_skip == ' ';(*text_skip)++) {};
 }
 
+void skip_zeros(char **text_skip) {
+	for(;**text_skip == '0';(*text_skip)++) {};
+}
+
+unsigned char count_digits (unsigned long long n)
+{
+    if (n == 0)
+        return 1;
+    unsigned char i = 0;
+    while (n != 0) {
+        n = n / 10;
+        ++i;
+    }
+    return i;
+}
+
+unsigned long long pow_custom(unsigned char base,unsigned char exponent)
+{
+	long long result = 1;
+	int i = 0;
+	for (;i <  exponent;i++) {
+		result = result * base;
+
+	}
+	return result;
+
+}
+
 unsigned char
 check_endianness(void)
 {
@@ -34,27 +62,6 @@ char * strsep_custom(char **str,char delim) {
         **str = 0;
         (*str)++;
         return save;
-}
-
-unsigned char truncate_double(double *temp_double)
-{
-
-	char string_from_double[50] = {0};
-	char *endptr;
-
-	snprintf(string_from_double,sizeof(string_from_double),"%.2lf",*temp_double);
-	printf("what snprintf produced trying to convert double to string: %s\n",string_from_double);
-	*temp_double = strtod(string_from_double,&endptr);
-	if(endptr == string_from_double) {
-		gtk_label_set_text( GTK_LABEL(total_results_label), "error");
-		gtk_label_set_text( GTK_LABEL(total_filtered_results_label), "error");
-		gtk_text_buffer_set_text(error_buffer,"snprintf() outputting garbage",-1);
-		fprintf(stderr,"can't convert to double from snprintf created string\n"
-				"snprintf() outputting garbage\n");
-		return FAILURE;
-	}
-	return SUCCESS;
-
 }
 
 gboolean keypress_function(GtkWidget *widget, GdkEventKey *event, gpointer data)

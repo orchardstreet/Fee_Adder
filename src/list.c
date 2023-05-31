@@ -11,9 +11,8 @@ unsigned char add_all_rows(GtkTreeModel *model)
 	/* first parameter of this function is accepting our base GtkListStore cast to a GtkTreeModel */
 	GtkTreeIter iter;
 	gboolean is_visible;
-	gdouble gitem_amount;
-	char string_from_double[50] = {0};
-	double item_amount = 0;
+	char string_from_llu[MAX_AMOUNT_CHARS] = {0};
+	unsigned long long item_amount = 0;
 	/* set globally defined totals to 0, because we are re-counting everything in the liststore */
 	amount_total = 0;
 	filtered_amount_total = 0;
@@ -26,25 +25,29 @@ unsigned char add_all_rows(GtkTreeModel *model)
 
 	do {
 		gtk_tree_model_get(model, &iter, SHOW_C,&is_visible,-1);
-		gtk_tree_model_get(model, &iter, AMOUNT_C, &gitem_amount, -1);
-		item_amount = (double) gitem_amount;
-		printf("item amount: %lf\n",item_amount);
-		/* truncate double the same way we do the rest of the program, so totals make sense */
-		/* ie with the %.2lf snprintf/sprintf format specifier */
-		if(truncate_double(&item_amount) == FAILURE)
+		gtk_tree_model_get(model, &iter, AMOUNT_C, &item_amount, -1);
+		printf("item amount: %llu\n",item_amount);
+		if(amount_total + item_amount >= UINT64_MAX || amount_total + item_amount < amount_total) {
+			gtk_text_buffer_set_text(error_buffer,"Cannot add amount. Amount total out of range, should be between"
+					" 0 and UINT64_MAX",-1);
+			fprintf(stderr,"Cannot add amount. Amount total out of range, should be between 0 and UINT64_MAX\n");
+			fprintf(stderr,"amount total: %llu, item_amount: %llu\n",amount_total,item_amount);
 			return FAILURE;
+		}
 		if(is_visible)
 			filtered_amount_total += item_amount;
 		amount_total += item_amount;
 
 	} while(gtk_tree_model_iter_next(model,&iter));
 
-	printf("filtered total paid: %lf\n",filtered_amount_total);
-	printf("total paid: %lf\n",amount_total);
-	snprintf(string_from_double,50,"%.2lf",amount_total);
-	gtk_label_set_text(GTK_LABEL(total_results_label), string_from_double);
-	snprintf(string_from_double,50,"%.2lf",filtered_amount_total);
-	gtk_label_set_text(GTK_LABEL(total_filtered_results_label), string_from_double);
+	printf("filtered total paid: %llu\n",filtered_amount_total);
+	printf("total paid: %llu\n",amount_total);
+	if(cents_to_string(amount_total,string_from_llu) == FAILURE)
+		return FAILURE;
+	gtk_label_set_text(GTK_LABEL(total_results_label), string_from_llu);
+	if(cents_to_string(filtered_amount_total,string_from_llu) == FAILURE)
+		return FAILURE;
+	gtk_label_set_text(GTK_LABEL(total_filtered_results_label), string_from_llu);
 
 	return SUCCESS;
 
@@ -53,7 +56,7 @@ unsigned char add_all_rows(GtkTreeModel *model)
 void do_add(GtkWidget *widget, gpointer model)
 {
 
-	double number;
+	unsigned long long number;
 	/* The data at these pointers can't be modified */
 	/* ideally we should copy this into a local array
 	 * Check to see if it is not undefined behaviour to
@@ -79,10 +82,12 @@ void do_add(GtkWidget *widget, gpointer model)
 	}
 	if(validate_amount(amount_ptr,&number) == FAILURE)
 		return;
-	printf("added number: %lf\n",amount_total+number);
-	if(amount_total + number >= 7777777777.55 || amount_total + number <= -7777777777.55) {
+	printf("added number: %llu\n",amount_total+number);
+	if(amount_total + number >= UINT64_MAX || amount_total + number < amount_total) {
 		gtk_text_buffer_set_text(error_buffer,"Cannot add amount. Amount total out of range, should be between"
-				" -7777777777.55 and 7777777777.55",-1);
+				" 0 and UINT64_MAX",-1);
+		fprintf(stderr,"Cannot add amount. Amount total out of range, should be between 0 and UINT64_MAX\n");
+		fprintf(stderr,"amount total: %llu, item_amount: %llu\n",amount_total,number);
 		return;
 	}
 

@@ -1,3 +1,5 @@
+/* TODO implement llu_to_str in save and possiby elsewhere */
+/* TODO change %ld to %llu everywhere!!! */
 /* TODO launch external window after filters button */
 /* TODO put border around entire value entry section, to remove awkward look */
 /* TODO filter out special characters from input */
@@ -28,8 +30,8 @@ GtkWidget *scrolled_window;
 GtkWidget *total_filtered_results_label;
 GtkWidget *total_results_label;
 GtkWidget *window;
-double filtered_amount_total;
-double amount_total;
+unsigned long long filtered_amount_total;
+unsigned long long amount_total;
 char filename[FILENAME_SIZE] = "purchase_log.csv";
 
 /* Main */
@@ -37,10 +39,10 @@ int main(int argc, char **argv)
 {
 
 	/* Init local variables */
-	GtkWidget *grid, *grid2, *box, *box2, *date_label, *person_label, 
+	GtkWidget *grid, *grid2, *grid3, *box, *box2, *box3, *date_label, *person_label,
 		*amount_label, *add_label, *tree_view, *filter_button, *search_button, *edit_button, *add_button,
-		*hide_button, *delete_button, *hide_all_button, *show_all_button, *save_button,
-		*method_label;
+		*delete_button, *save_button, *before_totals_seperator, *method_label,
+		*total_filtered_label, *total_label;
 	GtkTreeViewColumn *column, *column1, *column2, *column3;
 	GtkListStore *model;
 	GtkTreeModel *filter;
@@ -90,7 +92,7 @@ int main(int argc, char **argv)
 	gtk_entry_set_width_chars (GTK_ENTRY(date_entry), 8);
 
 	/* Add person entry to value entry grid */
-	person_label = gtk_label_new("Customer");
+	person_label = gtk_label_new("Customerrr");
         gtk_widget_set_halign (person_label, GTK_ALIGN_START);
 	gtk_widget_set_margin_start(person_label,3);
 	gtk_grid_attach(GTK_GRID(grid),person_label,1,0,1,1);
@@ -134,7 +136,7 @@ int main(int argc, char **argv)
 
 	/* Create another vertically oriented box to pack into last hbox
 	 * this will contain the scrolled window and totals */
-	GtkWidget *box3 = gtk_box_new(GTK_ORIENTATION_VERTICAL,20);
+	box3 = gtk_box_new(GTK_ORIENTATION_VERTICAL,20);
 	gtk_box_pack_start (GTK_BOX (box2), box3, FALSE, TRUE, 0);
 
 	/* Create a scrollable window */
@@ -159,7 +161,7 @@ int main(int argc, char **argv)
 		G_TYPE_STRING,  /* 0th column, date, DATE_C */
 		G_TYPE_STRING,  /* first column, person, PERSON_C */
 		G_TYPE_STRING,  /* second column, payment method, PAYMENT_METHOD_C */
-		G_TYPE_DOUBLE,  /* third column, amount, AMOUNT_C */
+		G_TYPE_UINT64,  /* third column, amount, AMOUNT_C */
 		G_TYPE_UINT,   /* fourth column, year, YEAR_C */
 		G_TYPE_UCHAR,   /* fifth column, month, MONTH_C */
 		G_TYPE_UCHAR,   /* sixth column, day, DAY_C */
@@ -249,21 +251,9 @@ int main(int argc, char **argv)
 	delete_button = gtk_button_new_with_label("Delete row");
 	gtk_grid_attach(GTK_GRID(grid2), delete_button, 0, 3, 1, 1);
 
-	/* Create hide button */
-	hide_button = gtk_button_new_with_label("Hide");
-	//gtk_grid_attach(GTK_GRID(grid2), hide_button, 0, 4, 1, 1);
-
-	/* Create Hide all button */
-	hide_all_button = gtk_button_new_with_label("Hide all");
-	//gtk_grid_attach(GTK_GRID(grid2), hide_all_button, 0, 5, 1, 1);
-
-	/* Create Show all button */
-	show_all_button = gtk_button_new_with_label("Show all");
-	//gtk_grid_attach(GTK_GRID(grid2), show_all_button, 0, 6, 1, 1);
-
 	/* Create Save button */
 	save_button = gtk_button_new_with_label("Save");
-	gtk_grid_attach(GTK_GRID(grid2), save_button, 0, 7, 1, 1);
+	gtk_grid_attach(GTK_GRID(grid2), save_button, 0, 4, 1, 1);
 
 	/* Pack grid2 to box2 */
 	gtk_box_pack_start (GTK_BOX (box2), grid2, TRUE, TRUE, 0);
@@ -273,12 +263,10 @@ int main(int argc, char **argv)
         gtk_widget_set_valign (grid2, GTK_ALIGN_START);
 
 	/* create seperator for before totals */
-	GtkWidget *before_totals_seperator = gtk_separator_new(GTK_ORIENTATION_VERTICAL);
+	before_totals_seperator = gtk_separator_new(GTK_ORIENTATION_VERTICAL);
  	gtk_widget_set_size_request (before_totals_seperator, 40, 2);
 
 	/* Create grid for totals */
-	GtkWidget *grid3, *filters_applied_label, *filters_applied_results_label, *total_filtered_label,
-		  *total_label;
 	grid3 = gtk_grid_new();
 	/* Set grid spacing */
 	gtk_grid_set_row_spacing (GTK_GRID(grid3),9);
