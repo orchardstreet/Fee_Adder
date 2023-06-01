@@ -6,6 +6,21 @@
 #include "headers/validate.h"
 #include "headers/utils.h"
 
+void amount_cell_data_func(GtkTreeViewColumn *col,
+						   GtkCellRenderer *renderer,
+						   GtkTreeModel *model,
+						   GtkTreeIter *iter,
+						   gpointer user_data) {
+	char amount_string[MAX_AMOUNT_CHARS] = {0};
+	unsigned long long amount;
+	gtk_tree_model_get(model,iter,AMOUNT_C,&amount,-1);
+	if(cents_to_string(amount,amount_string) == FAILURE) {
+		g_object_set(renderer,"text","error",NULL);
+		return;
+	}
+	g_object_set(renderer,"text",amount_string,NULL);
+}
+
 unsigned char add_all_rows(GtkTreeModel *model)
 {
 	/* first parameter of this function is accepting our base GtkListStore cast to a GtkTreeModel */
