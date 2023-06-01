@@ -6,6 +6,7 @@
 #include "headers/validate.h"
 #include "headers/utils.h"
 
+/* Render each row in amount column as full decimal rather than cents */
 void amount_cell_data_func(GtkTreeViewColumn *col,
 						   GtkCellRenderer *renderer,
 						   GtkTreeModel *model,

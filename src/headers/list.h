@@ -4,9 +4,5 @@
 
 void do_add(GtkWidget *widget, gpointer model);
 unsigned char add_all_rows(GtkTreeModel *model);
-void amount_cell_data_func(GtkTreeViewColumn *col,
-						   GtkCellRenderer *renderer,
-						   GtkTreeModel *model,
-						   GtkTreeIter *iter,
-						   gpointer user_data);
+void amount_cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer, GtkTreeModel *model, GtkTreeIter *iter, gpointer user_data);
 #endif
