@@ -1,3 +1,4 @@
+/* TODO add paid this month column */
 /* TODO implement llu_to_str in save and possiby elsewhere */
 /* TODO change %ld to %llu everywhere!!! */
 /* TODO launch external window after filters button */
@@ -33,6 +34,23 @@ GtkWidget *window;
 unsigned long long filtered_amount_total;
 unsigned long long amount_total;
 char filename[FILENAME_SIZE] = "purchase_log.csv";
+
+void amount_cell_data_func(GtkTreeViewColumn *col,
+						   GtkCellRenderer *renderer,
+						   GtkTreeModel *model,
+						   GtkTreeIter *iter,
+						   gpointer user_data) {
+	char amount_string[MAX_AMOUNT_CHARS] = {0};
+	unsigned long long amount;
+	gtk_tree_model_get(model,iter,AMOUNT_C,&amount,-1);
+	if(cents_to_string(amount,amount_string) == FAILURE) {
+		g_object_set(renderer,"text","error",NULL);
+		return;
+	}
+	g_object_set(renderer,"text",amount_string,NULL);
+}
+
+
 
 /* Main */
 int main(int argc, char **argv)
@@ -221,6 +239,24 @@ int main(int argc, char **argv)
 
 
 	/* Treeview column 3 */
+	column3 = gtk_tree_view_column_new();
+	gtk_tree_view_column_set_title(column3,"Shekels");
+	gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view),column3);
+	GtkCellRenderer *renderer3;
+	renderer3 = gtk_cell_renderer_text_new();
+	gtk_tree_view_column_pack_start(column3,renderer3,TRUE);
+	gtk_tree_view_column_add_attribute(column3,renderer3,"text",AMOUNT_C);
+	g_object_set(renderer3,
+				 "weight",PANGO_WEIGHT_BOLD,
+				 "weight-set", TRUE,
+				 NULL);
+	gtk_tree_view_column_set_cell_data_func(column3,renderer3,amount_cell_data_func,NULL, NULL);
+	gtk_tree_view_column_set_expand ( column3, TRUE);
+	gtk_tree_view_column_set_fixed_width (column2,100);
+	g_object_set(renderer3, "editable", TRUE, NULL);
+
+
+	/*
 	column3 = gtk_tree_view_column_new_with_attributes("Shekels",
 		gtk_cell_renderer_text_new(),
 		"text", AMOUNT_C,
@@ -228,6 +264,8 @@ int main(int argc, char **argv)
 	gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column3);
 	gtk_tree_view_column_set_expand ( column3, TRUE);
 	gtk_tree_view_column_set_fixed_width (column3,100);
+	*/
+
 
 
 	/* Create grid for right-side buttons */
