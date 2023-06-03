@@ -185,8 +185,8 @@ unsigned char validate_amount(char *str_ptr, unsigned long long *number)
 	skip_whitespace(&str_ptr);
 	if(!(*str_ptr)) {
 		*number = 0;
-		printf("nothing input\n");
-		gtk_text_buffer_set_text(error_buffer,"Please enter an amount\n",-1);
+		fprintf(stderr,"amount field empty\n");
+		gtk_text_buffer_set_text(error_buffer,"Please enter an amount",-1);
 		return FAILURE;
 	}
 	/* validate integer digits */

@@ -47,7 +47,7 @@ int main(int argc, char **argv)
 		*amount_label, *add_label, *tree_view, *filter_button, *search_button, *edit_button, *add_button,
 		*delete_button, *save_button, *before_totals_seperator, *method_label,
 		*total_filtered_label, *total_label;
-	GtkTreeViewColumn *column, *column1, *column2, *column3;
+	GtkTreeViewColumn *column0, *column1, *column2, *column3;
 	GtkListStore *model;
 	GtkTreeModel *filter;
 
@@ -197,32 +197,52 @@ int main(int argc, char **argv)
 
 	/* Add columns to treeview */
 	/* Treeview column 0 */
-	column = gtk_tree_view_column_new_with_attributes("Date paid",
-		gtk_cell_renderer_spin_new(),
-		"text", DATE_C,
-		NULL);
-	gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
-	gtk_tree_view_column_set_expand ( column, TRUE);
-	gtk_tree_view_column_set_fixed_width (column,125);
+	column0 = gtk_tree_view_column_new();
+	gtk_tree_view_column_set_title(column0,"Date paid");
+	gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view),column0);
+	GtkCellRenderer *renderer0;
+	renderer0 = gtk_cell_renderer_text_new();
+	gtk_tree_view_column_pack_start(column0,renderer0,TRUE);
+	gtk_tree_view_column_add_attribute(column0,renderer0,"text",PAYMENT_METHOD_C);
+	g_object_set(renderer0,
+				 "weight",PANGO_WEIGHT_BOLD,
+				 "weight-set", TRUE,
+				 NULL);
+	gtk_tree_view_column_set_expand ( column0, TRUE);
+	gtk_tree_view_column_set_fixed_width (column0,125);
+	g_object_set(renderer0, "editable", TRUE, NULL);
 
 	/* Treeview column 1 */
-	column1 = gtk_tree_view_column_new_with_attributes("Customer",
-		gtk_cell_renderer_text_new(),
-		"text", PERSON_C,
-		NULL);
-	gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column1);
+	column1 = gtk_tree_view_column_new();
+	gtk_tree_view_column_set_title(column1,"Customer");
+	gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view),column1);
+	GtkCellRenderer *renderer1;
+	renderer1 = gtk_cell_renderer_text_new();
+	gtk_tree_view_column_pack_start(column1,renderer1,TRUE);
+	gtk_tree_view_column_add_attribute(column1,renderer1,"text",PAYMENT_METHOD_C);
+	g_object_set(renderer1,
+				 "weight",PANGO_WEIGHT_BOLD,
+				 "weight-set", TRUE,
+				 NULL);
 	gtk_tree_view_column_set_expand ( column1, TRUE);
 	gtk_tree_view_column_set_fixed_width (column1,190);
+	g_object_set(renderer1, "editable", TRUE, NULL);
 
 	/* Treeview column 2 */
-	column2 = gtk_tree_view_column_new_with_attributes("Method",
-		gtk_cell_renderer_text_new(),
-		"text", PAYMENT_METHOD_C,
-		NULL);
-	gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column2);
+	column2 = gtk_tree_view_column_new();
+	gtk_tree_view_column_set_title(column2,"Method");
+	gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view),column2);
+	GtkCellRenderer *renderer2;
+	renderer2 = gtk_cell_renderer_text_new();
+	gtk_tree_view_column_pack_start(column2,renderer2,TRUE);
+	gtk_tree_view_column_add_attribute(column2,renderer2,"text",PAYMENT_METHOD_C);
+	g_object_set(renderer2,
+				 "weight",PANGO_WEIGHT_BOLD,
+				 "weight-set", TRUE,
+				 NULL);
 	gtk_tree_view_column_set_expand ( column2, TRUE);
 	gtk_tree_view_column_set_fixed_width (column2,105);
-
+	g_object_set(renderer2, "editable", TRUE, NULL);
 
 	/* Treeview column 3 */
 	column3 = gtk_tree_view_column_new();
