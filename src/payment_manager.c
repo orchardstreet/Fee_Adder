@@ -203,7 +203,7 @@ int main(int argc, char **argv)
 	GtkCellRenderer *renderer0;
 	renderer0 = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(column0,renderer0,TRUE);
-	gtk_tree_view_column_add_attribute(column0,renderer0,"text",PAYMENT_METHOD_C);
+	gtk_tree_view_column_add_attribute(column0,renderer0,"text",DATE_C);
 	g_object_set(renderer0,
 				 "weight",PANGO_WEIGHT_BOLD,
 				 "weight-set", TRUE,
@@ -219,7 +219,7 @@ int main(int argc, char **argv)
 	GtkCellRenderer *renderer1;
 	renderer1 = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(column1,renderer1,TRUE);
-	gtk_tree_view_column_add_attribute(column1,renderer1,"text",PAYMENT_METHOD_C);
+	gtk_tree_view_column_add_attribute(column1,renderer1,"text",PERSON_C);
 	g_object_set(renderer1,
 				 "weight",PANGO_WEIGHT_BOLD,
 				 "weight-set", TRUE,
