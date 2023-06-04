@@ -1,5 +1,4 @@
 /* TODO add paid this month column */
-/* TODO implement llu_to_str in save and possiby elsewhere */
 /* TODO change %ld to %llu everywhere!!! */
 /* TODO launch external window after filters button */
 /* TODO put border around entire value entry section, to remove awkward look */
@@ -8,7 +7,6 @@
 /* TODO see where two numbers added messes up total at bottom, and adjust the range
  * of acceptable values in do_add accordingly */
 /* TODO make totals BOLD and BIG */
-/* TODO less 0s https://docs.gtk.org/gtk3/treeview-tutorial.html#cell-data-functions */
 #include <stdlib.h>
 #include <stdio.h>
 #include <gtk/gtk.h>
@@ -65,11 +63,13 @@ int main(int argc, char **argv)
 	printf("Columns: %d\n",TOTAL_COLUMNS);
 
 	/* Create vertically oriented box to pack program widgets into */
-	box = gtk_box_new(GTK_ORIENTATION_VERTICAL,20);
+	box = gtk_box_new(GTK_ORIENTATION_VERTICAL,10);
+	GtkStyleContext *window_context = gtk_widget_get_style_context(box);
+	gtk_style_context_add_class(window_context,"custom_window");
 
 	/* Create window, set title, border width, and size */
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_title (GTK_WINDOW(window) , "Fee Adder" );
+	gtk_window_set_title (GTK_WINDOW(window) , "Payment Manager" );
 	gtk_container_set_border_width (GTK_CONTAINER(window),10); 
 	gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
 	gtk_window_set_default_size ( GTK_WINDOW(window), 800, 580);
@@ -77,32 +77,55 @@ int main(int argc, char **argv)
 	/* Destroy window on close */
 	g_signal_connect(window,"destroy",G_CALLBACK(gtk_main_quit),NULL);
 
+	/* init CSS */
+	char *app_css =  "window {background-color:#f3f3f3}"
+					".custom_frame {margin-top:10px;box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 2px 0px;background-color:#fbfbfb;border-radius:8px}"
+				     ".custom_frame > border {border-radius: 8px; padding: 10px 62px 10px 62px;background-color:#fbfbfb}"
+					".custom_body {border:1px solid #d5d0cc;box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 2px 0px;border-radius:8px;padding-left:20px;padding-right:20px;padding-bottom:20px;padding-top:20px;background-color:#fbfbfb;margin-bottom:20px;}"
+					".custom_table {border:1px solid #abadb3;}"
+					".custom_treeview {}";
+
+	GtkCssProvider* css_provider = gtk_css_provider_new();
+	gtk_css_provider_load_from_data(css_provider,app_css,-1,NULL);
+    GdkScreen* screen = gdk_screen_get_default();
+	gtk_style_context_add_provider_for_screen (screen,GTK_STYLE_PROVIDER(css_provider),GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+
+
+	/* Create a frame for value entries */
+	GtkWidget *frame = gtk_frame_new("Add Row");
+	gtk_box_pack_start (GTK_BOX (box), frame, FALSE, TRUE, 0);
+	gtk_frame_set_label_align (GTK_FRAME(frame),0.5,0);
+	/* align frame */
+    gtk_widget_set_halign (frame, GTK_ALIGN_CENTER);
+	/* style frame */
+	GtkStyleContext *frame_context = gtk_widget_get_style_context(frame);
+	gtk_style_context_add_class(frame_context,"custom_frame");
+
+
 	/* Create grid for value entry */
 	grid = gtk_grid_new();
 	gtk_grid_set_row_spacing (GTK_GRID(grid),2);
 	gtk_grid_set_column_spacing (GTK_GRID(grid),10);
-	/* Add grid to vertical box */
-	gtk_box_pack_start (GTK_BOX (box), grid, FALSE, TRUE, 0);
-	/* Add margin to value entry grid */
-	gtk_widget_set_margin_top(grid,15);
+	/* Add grid to frame */
+	gtk_container_add(GTK_CONTAINER(frame),grid);
 
 	/* Add date entry to value entry grid */
-	date_label = gtk_label_new("Date (dd/mm/yy)");
+	date_label = gtk_label_new("Date");
         gtk_widget_set_halign (date_label, GTK_ALIGN_START);
 	gtk_widget_set_margin_start(date_label,3);
 	gtk_grid_attach(GTK_GRID(grid),date_label,0,0,1,1);
 	date_entry = gtk_entry_new();
 	gtk_grid_attach(GTK_GRID(grid),date_entry,0,1,1,1);
-	gtk_entry_set_width_chars (GTK_ENTRY(date_entry), 8);
+	gtk_entry_set_width_chars (GTK_ENTRY(date_entry), 9);
 
 	/* Add person entry to value entry grid */
-	person_label = gtk_label_new("Customerrr");
+	person_label = gtk_label_new("Customer");
         gtk_widget_set_halign (person_label, GTK_ALIGN_START);
 	gtk_widget_set_margin_start(person_label,3);
 	gtk_grid_attach(GTK_GRID(grid),person_label,1,0,1,1);
 	person_entry = gtk_entry_new();
 	gtk_grid_attach(GTK_GRID(grid),person_entry,1,1,1,1);
-	gtk_entry_set_width_chars (GTK_ENTRY(person_entry), 20);
+	gtk_entry_set_width_chars (GTK_ENTRY(person_entry), 24);
 
 	/* Add payment method to value entry grid */
 	method_label = gtk_label_new("Method");
@@ -111,7 +134,7 @@ int main(int argc, char **argv)
 	gtk_grid_attach(GTK_GRID(grid),method_label,2,0,1,1);
 	method_entry = gtk_entry_new();
 	gtk_grid_attach(GTK_GRID(grid),method_entry,2,1,1,1);
-	gtk_entry_set_width_chars (GTK_ENTRY(method_entry), 10);
+	gtk_entry_set_width_chars (GTK_ENTRY(method_entry), 15);
 
 	/* Add amount entry to value entry grid */
 	amount_label = gtk_label_new("Shekels");
@@ -120,10 +143,8 @@ int main(int argc, char **argv)
 	gtk_grid_attach(GTK_GRID(grid),amount_label,3,0,1,1);
 	amount_entry = gtk_entry_new();
 	gtk_grid_attach(GTK_GRID(grid),amount_entry,3,1,1,1);
-	gtk_entry_set_width_chars (GTK_ENTRY(amount_entry), 10);
-	/* Align value entry grid */
-        gtk_widget_set_halign (grid, GTK_ALIGN_CENTER);
-	gtk_widget_set_margin_end(grid,70);
+	gtk_entry_set_width_chars (GTK_ENTRY(amount_entry), 12);
+
 
 	/* Add 'add' button to value entry grid */
 	add_label = gtk_label_new("");
@@ -133,8 +154,10 @@ int main(int argc, char **argv)
 
 	/* Create horizontally oriented box to horizontally pack progam widgets into */
 	box2 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL,20);
+	GtkStyleContext *body_context = gtk_widget_get_style_context(box2);
+	gtk_style_context_add_class(body_context,"custom_body");
 	/* Pack horizontal box into vertical box */
-	gtk_box_pack_start (GTK_BOX (box), box2, FALSE, TRUE, 0);
+	gtk_box_pack_start (GTK_BOX (box), box2, TRUE, TRUE, 0);
 	/* Align horizontal box */
         gtk_widget_set_halign (box2, GTK_ALIGN_CENTER);
 
@@ -145,19 +168,22 @@ int main(int argc, char **argv)
 
 	/* Create a scrollable window */
 	scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+	gtk_widget_set_margin_start(scrolled_window,40);
 	/* Set preferred size of scrollable window */
- 	gtk_widget_set_size_request (scrolled_window, 540, 300);
+ 	gtk_widget_set_size_request (scrolled_window, 420, 300);
 	/* Always include a vertical scroll cursor on scroll window */
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window), GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
+	gtk_scrolled_window_set_overlay_scrolling (GTK_SCROLLED_WINDOW(scrolled_window),FALSE);
 	/* Add scrollable window to horizontal box */
 	gtk_box_pack_start (GTK_BOX (box3), scrolled_window, TRUE, TRUE, 0);
 	/* Align scrollable window */
         gtk_widget_set_halign (scrolled_window, GTK_ALIGN_START);
-	g_object_set (scrolled_window, "vexpand", TRUE, NULL);
-	g_object_set (scrolled_window, "hexpand", FALSE, NULL);
-        //gtk_widget_set_valign (scrolled_window, GTK_ALIGN_START);
-        //g_object_set (scrolled_window, "margin", 10, NULL);
-    	gtk_widget_show (scrolled_window);
+	//g_object_set (scrolled_window, "vexpand", TRUE, NULL);
+	//g_object_set (scrolled_window, "hexpand", FALSE, NULL);
+	/* set style for scrolled window */
+	GtkStyleContext *table_context = gtk_widget_get_style_context(scrolled_window);
+	gtk_style_context_add_class(table_context,"custom_table");
+    gtk_widget_show (scrolled_window);
 
 	/* Create liststore for table */
 	model = gtk_list_store_new(
@@ -184,9 +210,15 @@ int main(int argc, char **argv)
 	/* create treestore as filter of liststore */
 	filter = gtk_tree_model_filter_new(GTK_TREE_MODEL(model),NULL);
 	gtk_tree_model_filter_set_visible_column(GTK_TREE_MODEL_FILTER(filter),TOTAL_COLUMNS - 1);
+	/* wrap treestore in a sorted treestore */
+	GtkTreeModel *sorted_model = gtk_tree_model_sort_new_with_model(filter);
+	gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (sorted_model), PERSON_C, GTK_SORT_ASCENDING);
 
 	/* Create treeview from treestore */
-	tree_view = gtk_tree_view_new_with_model(GTK_TREE_MODEL(filter));
+	tree_view = gtk_tree_view_new_with_model(GTK_TREE_MODEL(sorted_model));
+	/* Style for treeview */
+	GtkStyleContext *treeview_context = gtk_widget_get_style_context(tree_view);
+	gtk_style_context_add_class(treeview_context,"custom_treeview");
 
 	/* Scroll the scrollable window to bottom when the size of treeview changes
 	 * Default behaviour is to hide new rows at bottom for some reason */
@@ -204,12 +236,11 @@ int main(int argc, char **argv)
 	renderer0 = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(column0,renderer0,TRUE);
 	gtk_tree_view_column_add_attribute(column0,renderer0,"text",DATE_C);
-	g_object_set(renderer0,
-				 "weight",PANGO_WEIGHT_BOLD,
-				 "weight-set", TRUE,
-				 NULL);
-	gtk_tree_view_column_set_expand ( column0, TRUE);
-	gtk_tree_view_column_set_fixed_width (column0,125);
+	//gtk_tree_view_column_set_expand ( column0, TRUE);
+	gtk_tree_view_column_set_fixed_width (column0,90);
+	gtk_tree_view_column_set_sort_column_id(column0,DATE_C);
+	gtk_tree_view_column_set_resizable (column0, TRUE);
+	gtk_tree_view_column_set_sizing (column0, GTK_TREE_VIEW_COLUMN_FIXED);
 	g_object_set(renderer0, "editable", TRUE, NULL);
 
 	/* Treeview column 1 */
@@ -220,12 +251,10 @@ int main(int argc, char **argv)
 	renderer1 = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(column1,renderer1,TRUE);
 	gtk_tree_view_column_add_attribute(column1,renderer1,"text",PERSON_C);
-	g_object_set(renderer1,
-				 "weight",PANGO_WEIGHT_BOLD,
-				 "weight-set", TRUE,
-				 NULL);
-	gtk_tree_view_column_set_expand ( column1, TRUE);
-	gtk_tree_view_column_set_fixed_width (column1,190);
+	gtk_tree_view_column_set_fixed_width (column1,160);
+	gtk_tree_view_column_set_sort_column_id(column1,PERSON_C);
+	gtk_tree_view_column_set_resizable (column1, TRUE);
+	gtk_tree_view_column_set_sizing (column1, GTK_TREE_VIEW_COLUMN_FIXED);
 	g_object_set(renderer1, "editable", TRUE, NULL);
 
 	/* Treeview column 2 */
@@ -236,12 +265,11 @@ int main(int argc, char **argv)
 	renderer2 = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(column2,renderer2,TRUE);
 	gtk_tree_view_column_add_attribute(column2,renderer2,"text",PAYMENT_METHOD_C);
-	g_object_set(renderer2,
-				 "weight",PANGO_WEIGHT_BOLD,
-				 "weight-set", TRUE,
-				 NULL);
-	gtk_tree_view_column_set_expand ( column2, TRUE);
-	gtk_tree_view_column_set_fixed_width (column2,105);
+	//gtk_tree_view_column_set_expand ( column2, TRUE);
+	gtk_tree_view_column_set_fixed_width (column2,90);
+	gtk_tree_view_column_set_sort_column_id(column2,PAYMENT_METHOD_C);
+	gtk_tree_view_column_set_resizable (column2, TRUE);
+	gtk_tree_view_column_set_sizing (column2, GTK_TREE_VIEW_COLUMN_FIXED);
 	g_object_set(renderer2, "editable", TRUE, NULL);
 
 	/* Treeview column 3 */
@@ -252,14 +280,19 @@ int main(int argc, char **argv)
 	renderer3 = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(column3,renderer3,TRUE);
 	gtk_tree_view_column_add_attribute(column3,renderer3,"text",AMOUNT_C);
+	/*
 	g_object_set(renderer3,
 				 "weight",PANGO_WEIGHT_BOLD,
 				 "weight-set", TRUE,
 				 NULL);
+				 */
 	gtk_tree_view_column_set_cell_data_func(column3,renderer3,amount_cell_data_func,NULL, NULL);
-	gtk_tree_view_column_set_expand ( column3, TRUE);
-	gtk_tree_view_column_set_fixed_width (column2,100);
+	gtk_tree_view_column_set_fixed_width (column3,60);
+	gtk_tree_view_column_set_sort_column_id(column3,AMOUNT_C);
+	gtk_tree_view_column_set_resizable (column3, TRUE);
+	gtk_tree_view_column_set_sizing (column3, GTK_TREE_VIEW_COLUMN_FIXED);
 	g_object_set(renderer3, "editable", TRUE, NULL);
+	g_object_set (G_OBJECT (renderer3), "xalign", (gfloat) 1.0, NULL);
 
 
 	/*
@@ -277,7 +310,7 @@ int main(int argc, char **argv)
 	/* Create grid for right-side buttons */
 	grid2 = gtk_grid_new();
 	gtk_grid_set_row_spacing (GTK_GRID(grid2),20);
-	gtk_widget_set_margin_top(grid2,55);
+	gtk_widget_set_margin_top(grid2,25);
 
 	/* Create filter button */
 	filter_button = gtk_button_new_with_label("Set filters");
