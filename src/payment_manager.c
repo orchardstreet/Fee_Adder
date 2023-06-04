@@ -49,11 +49,6 @@ int main(int argc, char **argv)
 	GtkListStore *model;
 	GtkTreeModel *filter;
 
-	printf("size of double: %zu\nsize of gdouble %zu\nsize of int: %zu\n"
-			"size of unsigned int: %zu\nsize of long: %zu\n"
-			"size of unsigned long %zu\n"
-			,sizeof(double),sizeof(gdouble),sizeof(int),sizeof(unsigned int)
-			,sizeof(long),sizeof(unsigned long));
 
 	/* Init GTK */
 	gtk_init(&argc,&argv);
@@ -382,39 +377,8 @@ int main(int argc, char **argv)
 
 	printf("Fee adder 0.1\n");
 	
-	if(check_endianness() == IS_BIG_ENDIAN) {
-		gtk_text_buffer_set_text(error_buffer,"Computer should be litte endian, please exit to avoid data issues\n",-1);	
-		fprintf(stderr,"Computer should be little endian, please exit to avoid data issues\n");	
-
-	}
-	if (sizeof(void *) != 8) {
-		gtk_text_buffer_set_text(error_buffer,"Error: please use a 64-bit computer, please exit to avoid data issues\n",-1);
-		fprintf(stderr,"Error: please use a 64-bit computer, please exit to avoid data issues\n");
-        }
-	/* warn if compiler didn't create correct length for types */
-	if(sizeof(double) != 8) {
-		gtk_text_buffer_set_text(error_buffer,"size of double must equal 8, please exit to avoid data issues\n",-1);	
-		fprintf(stderr,"size of double must equal 8, please exit to avoid data issues\n");	
-	}
-	if(sizeof(gdouble) != 8) {
-		gtk_text_buffer_set_text(error_buffer,"size of gdouble must equal 8, please exit to avoid data issues\n",-1);	
-		fprintf(stderr,"size of gdouble must equal 8, please exit to avoid data issues\n");	
-	}
-	if(sizeof(unsigned int) != 4) {
-		gtk_text_buffer_set_text(error_buffer,"size of unsigned int must equal 4, please exit to avoid data issues\n",-1);	
-		fprintf(stderr,"size of unsigned int must equal 4, please exit to avoid data issues\n");	
-	}
-	if(sizeof(int) != 4) {
-		gtk_text_buffer_set_text(error_buffer,"size of int must equal 4, please exit to avoid data issues\n",-1);	
-		fprintf(stderr,"size of int must equal 4, please exit to avoid data issues\n");	
-	}
-	if(sizeof(long) != 8) {
-		gtk_text_buffer_set_text(error_buffer,"size of long must equal 8, please exit to avoid data issues\n",-1);
-		fprintf(stderr,"size of long must equal 8, please exit to avoid data issues\n");
-	}
-	if(sizeof(unsigned long) != 8) {
-		gtk_text_buffer_set_text(error_buffer,"size of unsigned long must equal 8, please exit to avoid data issues\n",-1);	
-		fprintf(stderr,"size of unsigned long must equal 8, please exit to avoid data issues\n");	
+	if(check_system_compatibility() == SUCCESS) {
+		printf("Using a compatible system, hooray\n");
 	}
 	/* load items from csv file into liststore, treestore, and treeview */
 	load_items(model);

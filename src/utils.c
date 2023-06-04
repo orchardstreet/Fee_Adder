@@ -83,3 +83,47 @@ void scroll_to_end (GtkWidget *widget, GdkRectangle *allocate, gpointer user_dat
 	double page_size = gtk_adjustment_get_page_size (adjustment);
 	gtk_adjustment_set_value (adjustment, upper - page_size - 0);
 }
+
+unsigned char check_system_compatibility(void)
+{
+
+	printf("size of unsigned char: %zu\nsize of unsigned int %zu\n"
+			"size of unsigned long: %zu\nsize of unsigned long long%zu\n"
+			,sizeof(unsigned char),sizeof(unsigned int)
+			,sizeof(unsigned long),sizeof(unsigned long long));
+
+	if(check_endianness() == IS_BIG_ENDIAN) {
+		gtk_text_buffer_set_text(error_buffer,"Computer should be litte endian, please exit to avoid data issues\n",-1);
+		fprintf(stderr,"Computer should be little endian, please exit to avoid data issues\n");
+        return FAILURE;
+	}
+	if (sizeof(void *) != 8) {
+		gtk_text_buffer_set_text(error_buffer,"Error: please use a 64-bit computer, please exit to avoid data issues\n",-1);
+		fprintf(stderr,"Error: please use a 64-bit computer, please exit to avoid data issues\n");
+        return FAILURE;
+    }
+	/* warn if compiler didn't create correct length for types */
+	if(sizeof(unsigned char) != 1) {
+		gtk_text_buffer_set_text(error_buffer,"size of unsigned char must equal 1, please exit to avoid data issues\n",-1);
+		fprintf(stderr,"size of unsigned char must equal 1, please exit to avoid data issues\n");
+        return FAILURE;
+	}
+	if(sizeof(unsigned int) != 4) {
+		gtk_text_buffer_set_text(error_buffer,"size of unsigned int must equal 4, please exit to avoid data issues\n",-1);
+		fprintf(stderr,"size of unsigned int must equal 4, please exit to avoid data issues\n");
+        return FAILURE;
+	}
+	if(sizeof(unsigned long) != 8 && sizeof(unsigned long) != 4) {
+		gtk_text_buffer_set_text(error_buffer,"size of long must equal 8 or 4, please exit to avoid data issues\n",-1);
+		fprintf(stderr,"size of long must equal 8 or 4, please exit to avoid data issues\n");
+        return FAILURE;
+	}
+	if(sizeof(unsigned long long) != 8) {
+		gtk_text_buffer_set_text(error_buffer,"size of unsigned long long must equal 8, please exit to avoid data issues\n",-1);
+		fprintf(stderr,"size of unsigned long long must equal 8, please exit to avoid data issues\n");
+        return FAILURE;
+	}
+
+	return SUCCESS;
+
+}
