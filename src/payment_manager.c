@@ -36,7 +36,6 @@ unsigned char is_scrolling = 0;
 
 
 
-
 /* Main */
 int main(int argc, char **argv)
 {
@@ -177,6 +176,81 @@ int main(int argc, char **argv)
 	gtk_style_context_add_class(table_context,"custom_table");
     //gtk_widget_show (scrolled_window);
 
+
+	/* Create grid for right-side buttons */
+	grid2 = gtk_grid_new();
+	gtk_grid_set_row_spacing (GTK_GRID(grid2),20);
+	gtk_widget_set_margin_top(grid2,25);
+
+	/* Create filter button */
+	filter_button = gtk_button_new_with_label("Set filters");
+	gtk_grid_attach(GTK_GRID(grid2), filter_button, 0, 0, 1, 1);
+
+	/* Create search button */
+	search_button = gtk_button_new_with_label("Show all");
+	gtk_grid_attach(GTK_GRID(grid2), search_button, 0, 1, 1, 1);
+
+	/* Create edit button */
+	edit_button = gtk_button_new_with_label("Edit row");
+	gtk_grid_attach(GTK_GRID(grid2), edit_button, 0, 2, 1, 1);
+
+	/* Create delete button */
+	delete_button = gtk_button_new_with_label("Delete row");
+	gtk_grid_attach(GTK_GRID(grid2), delete_button, 0, 3, 1, 1);
+
+	/* Create Save button */
+	save_button = gtk_button_new_with_label("Save");
+	gtk_grid_attach(GTK_GRID(grid2), save_button, 0, 4, 1, 1);
+
+	/* Pack grid2 to box2 */
+	gtk_box_pack_start (GTK_BOX (box2), grid2, TRUE, TRUE, 0);
+
+	/* Align grid2 */
+        gtk_widget_set_halign (grid2, GTK_ALIGN_START);
+        gtk_widget_set_valign (grid2, GTK_ALIGN_START);
+
+	/* create seperator for before totals */
+	before_totals_seperator = gtk_separator_new(GTK_ORIENTATION_VERTICAL);
+ 	gtk_widget_set_size_request (before_totals_seperator, 40, 2);
+
+	/* Create grid for totals */
+	grid3 = gtk_grid_new();
+	/* Set grid spacing */
+	gtk_grid_set_row_spacing (GTK_GRID(grid3),9);
+	gtk_grid_set_column_spacing (GTK_GRID(grid3),0);
+	/* Set grid alignment */
+        gtk_widget_set_halign (grid3, GTK_ALIGN_END);
+	gtk_widget_set_margin_end(grid3,30);
+	/* Create grid members */
+	//filters_applied_label = gtk_label_new("Filters applied: ");
+        //gtk_widget_set_halign (filters_applied_label, GTK_ALIGN_START);
+	//filters_applied_results_label = gtk_label_new("date, payment method");
+        //gtk_widget_set_halign (filters_applied_results_label, GTK_ALIGN_START);
+	total_filtered_label = gtk_label_new("Total paid including filters:  ₪");
+        gtk_widget_set_halign (total_filtered_label, GTK_ALIGN_END);
+	total_filtered_results_label = gtk_label_new("0.00");
+        gtk_widget_set_halign (total_filtered_results_label, GTK_ALIGN_END);
+	total_label = gtk_label_new("Total paid:  ₪");
+        gtk_widget_set_halign (total_label, GTK_ALIGN_END);
+	total_results_label = gtk_label_new("0.00");
+        gtk_widget_set_halign (total_results_label, GTK_ALIGN_END);
+	/* Attach grid members */
+	//gtk_grid_attach(GTK_GRID(grid3),filters_applied_label,0,0,1,1);
+	//gtk_grid_attach(GTK_GRID(grid3),filters_applied_results_label,1,0,3,1);
+	gtk_grid_attach(GTK_GRID(grid3),before_totals_seperator,0,0,2,1);
+	gtk_grid_attach(GTK_GRID(grid3),total_filtered_label,0,1,1,1);
+	gtk_grid_attach(GTK_GRID(grid3),total_filtered_results_label,1,1,1,1);
+	gtk_grid_attach(GTK_GRID(grid3),total_label,0,2,1,1);
+	gtk_grid_attach(GTK_GRID(grid3),total_results_label,1,2,1,1);
+	gtk_box_pack_start (GTK_BOX (box3), grid3, TRUE, TRUE, 0);
+
+	/* error widget */
+	error_buffer = gtk_text_buffer_new(NULL);
+	error_widget = gtk_text_view_new_with_buffer(error_buffer);
+	gtk_text_buffer_set_text(error_buffer," ",-1);
+	gtk_box_pack_start (GTK_BOX (box), error_widget, 0, 0, 0);
+
+
 	/* Create liststore for table */
 	model = gtk_list_store_new(
 		TOTAL_COLUMNS,  /* required parameter, total columns */
@@ -202,12 +276,22 @@ int main(int argc, char **argv)
 	/* create treestore as filter of liststore */
 	filter = gtk_tree_model_filter_new(GTK_TREE_MODEL(model),NULL);
 	gtk_tree_model_filter_set_visible_column(GTK_TREE_MODEL_FILTER(filter),TOTAL_COLUMNS - 1);
-	/* wrap treestore in a sorted treestore */
+
+	/* Add box to window */
+	gtk_container_add(GTK_CONTAINER(window),box);
+
+	/* Load items */
+	load_items(model);
+
+	/* Create sorted model */
 	GtkTreeModel *sorted_model = gtk_tree_model_sort_new_with_model(filter);
 	gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (sorted_model), PERSON_C, GTK_SORT_ASCENDING);
 
+
 	/* Create treeview from treestore */
 	tree_view = gtk_tree_view_new_with_model(GTK_TREE_MODEL(sorted_model));
+	/* Add tree view to scrolled window */
+	gtk_container_add(GTK_CONTAINER(scrolled_window),tree_view);
 	/* Style for treeview */
 	GtkStyleContext *treeview_context = gtk_widget_get_style_context(tree_view);
 	gtk_style_context_add_class(treeview_context,"custom_treeview");
@@ -299,86 +383,13 @@ int main(int argc, char **argv)
 
 
 
-	/* Create grid for right-side buttons */
-	grid2 = gtk_grid_new();
-	gtk_grid_set_row_spacing (GTK_GRID(grid2),20);
-	gtk_widget_set_margin_top(grid2,25);
-
-	/* Create filter button */
-	filter_button = gtk_button_new_with_label("Set filters");
-	gtk_grid_attach(GTK_GRID(grid2), filter_button, 0, 0, 1, 1);
-
-	/* Create search button */
-	search_button = gtk_button_new_with_label("Show all");
-	gtk_grid_attach(GTK_GRID(grid2), search_button, 0, 1, 1, 1);
-
-	/* Create edit button */
-	edit_button = gtk_button_new_with_label("Edit row");
-	gtk_grid_attach(GTK_GRID(grid2), edit_button, 0, 2, 1, 1);
-
-	/* Create delete button */
-	delete_button = gtk_button_new_with_label("Delete row");
-	gtk_grid_attach(GTK_GRID(grid2), delete_button, 0, 3, 1, 1);
-
-	/* Create Save button */
-	save_button = gtk_button_new_with_label("Save");
-	gtk_grid_attach(GTK_GRID(grid2), save_button, 0, 4, 1, 1);
-
-	/* Pack grid2 to box2 */
-	gtk_box_pack_start (GTK_BOX (box2), grid2, TRUE, TRUE, 0);
-
-	/* Align grid2 */
-        gtk_widget_set_halign (grid2, GTK_ALIGN_START);
-        gtk_widget_set_valign (grid2, GTK_ALIGN_START);
-
-	/* create seperator for before totals */
-	before_totals_seperator = gtk_separator_new(GTK_ORIENTATION_VERTICAL);
- 	gtk_widget_set_size_request (before_totals_seperator, 40, 2);
-
-	/* Create grid for totals */
-	grid3 = gtk_grid_new();
-	/* Set grid spacing */
-	gtk_grid_set_row_spacing (GTK_GRID(grid3),9);
-	gtk_grid_set_column_spacing (GTK_GRID(grid3),0);
-	/* Set grid alignment */
-        gtk_widget_set_halign (grid3, GTK_ALIGN_END);
-	gtk_widget_set_margin_end(grid3,30);
-	/* Create grid members */
-	//filters_applied_label = gtk_label_new("Filters applied: ");
-        //gtk_widget_set_halign (filters_applied_label, GTK_ALIGN_START);
-	//filters_applied_results_label = gtk_label_new("date, payment method");
-        //gtk_widget_set_halign (filters_applied_results_label, GTK_ALIGN_START);
-	total_filtered_label = gtk_label_new("Total paid including filters:  ₪");
-        gtk_widget_set_halign (total_filtered_label, GTK_ALIGN_END);
-	total_filtered_results_label = gtk_label_new("0.00");
-        gtk_widget_set_halign (total_filtered_results_label, GTK_ALIGN_END);
-	total_label = gtk_label_new("Total paid:  ₪");
-        gtk_widget_set_halign (total_label, GTK_ALIGN_END);
-	total_results_label = gtk_label_new("0.00");
-        gtk_widget_set_halign (total_results_label, GTK_ALIGN_END);
-	/* Attach grid members */
-	//gtk_grid_attach(GTK_GRID(grid3),filters_applied_label,0,0,1,1);
-	//gtk_grid_attach(GTK_GRID(grid3),filters_applied_results_label,1,0,3,1);
-	gtk_grid_attach(GTK_GRID(grid3),before_totals_seperator,0,0,2,1);
-	gtk_grid_attach(GTK_GRID(grid3),total_filtered_label,0,1,1,1);
-	gtk_grid_attach(GTK_GRID(grid3),total_filtered_results_label,1,1,1,1);
-	gtk_grid_attach(GTK_GRID(grid3),total_label,0,2,1,1);
-	gtk_grid_attach(GTK_GRID(grid3),total_results_label,1,2,1,1);
-	gtk_box_pack_start (GTK_BOX (box3), grid3, TRUE, TRUE, 0);
-
-	/* error widget */
-	error_buffer = gtk_text_buffer_new(NULL);
-	error_widget = gtk_text_view_new_with_buffer(error_buffer);
-	gtk_text_buffer_set_text(error_buffer," ",-1);
-	gtk_box_pack_start (GTK_BOX (box), error_widget, 0, 0, 0);
-
 	printf("Fee adder 0.1\n");
 	
+	//gtk_tree_view_set_fixed_height_mode(GTK_TREE_VIEW(tree_view,TRUE);
 	if(check_system_compatibility() == SUCCESS) {
 		printf("Using a compatible system, hooray\n");
 	}
 	/* load items from csv file into liststore, treestore, and treeview */
-	load_items(model);
 
 	/* After clicking add, call 'do_add' function */
 	g_signal_connect(add_button,"clicked",G_CALLBACK(do_add),model);
@@ -387,12 +398,7 @@ int main(int argc, char **argv)
 	/* After pressing a keyboard button, called 'key_press_event */
 	g_signal_connect (G_OBJECT (window), "key_press_event", G_CALLBACK (keypress_function), NULL);
 
-	/* Add tree view to scrolled window */
-	gtk_container_add(GTK_CONTAINER(scrolled_window),tree_view);	
-	
-	/* Add box to window */
-	gtk_container_add(GTK_CONTAINER(window),box);
-
+	//gtk_tree_view_set_model(GTK_TREE_VIEW(tree_view),NULL);
 	/* Show everything */
 	gtk_widget_show_all(window);
 	is_scrolling = 1;

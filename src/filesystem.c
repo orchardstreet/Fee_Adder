@@ -11,7 +11,7 @@
 unsigned char load_items(GtkListStore *model)
 {
 
-	unsigned long current_line = 0;
+	unsigned long long current_line = 0;
 	FILE *the_file;
 	char * retval;
 	char line[MAX_DAY_CHARS + MAX_MONTH_CHARS + MAX_YEAR_CHARS +
@@ -43,6 +43,7 @@ unsigned char load_items(GtkListStore *model)
 	}
 
 	snprintf(finished_message,sizeof(finished_message),"Finished loading file at: %s",filename);
+	printf("Loading file from disk\n");
 
 	for(;current_line < ULONG_MAX;current_line++) {
 
@@ -58,7 +59,7 @@ unsigned char load_items(GtkListStore *model)
 				return UNFINISHED;
 			} else if(feof(the_file)) {
 				if(current_line == 0) {
-					fprintf(stderr,"Empty file, missing csv header, corrupt file %lu\n",current_line);
+					fprintf(stderr,"Empty file, missing csv header, corrupt file %llu\n",current_line);
 					gtk_text_buffer_set_text(error_buffer,"Empty file, missing csv header, corrupt file",-1);
 					fclose(the_file);
 					return FAILURE;
@@ -83,7 +84,7 @@ unsigned char load_items(GtkListStore *model)
 		}
 		newline_location = strchr(line,'\n');
 		if(!newline_location) {
-			fprintf(stderr,"No newline at end of line %lu\n",current_line);
+			fprintf(stderr,"No newline at end of line %llu\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,"No newline at end of .csv line."
 					"  File is corrupted, please check file",-1);
 			fclose(the_file);
@@ -91,7 +92,7 @@ unsigned char load_items(GtkListStore *model)
 		}
 		if(current_line == 0) {
 			if(strcmp(line,"Day,Month,Year,Customer,Method,Amount\n")) {
-				fprintf(stderr,"Invalid csv header, corrupt file %lu\n",current_line);
+				fprintf(stderr,"Invalid csv header, corrupt file %llu\n",current_line);
 				gtk_text_buffer_set_text(error_buffer,"Invalid csv header, corrupt file",-1);
 				fclose(the_file);
 				return FAILURE;
@@ -105,7 +106,7 @@ unsigned char load_items(GtkListStore *model)
 		token = strsep_custom(&end,',');
 		/* if no ending comma for day field */
 		if(!end) {
-			fprintf(stderr,"Missing comma on line %lu\n",current_line);
+			fprintf(stderr,"Missing comma on line %llu\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma."
 				      	" File is corrupted, please check file",-1);
 			fclose(the_file);
@@ -113,7 +114,7 @@ unsigned char load_items(GtkListStore *model)
 		}
 		/* if day csv field is empty, return */
 		if(!(*token)) {
-			fprintf(stderr,"Missing day on line %lu\n",current_line);
+			fprintf(stderr,"Missing day on line %llu\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,".csv file is missing day."
 				      	" File is corrupted, please check file",-1);
 			fclose(the_file);
@@ -121,7 +122,7 @@ unsigned char load_items(GtkListStore *model)
 		}
 		number = strtoul(token,&endptr,10);
 		if(endptr == token || (validate_day(&number) == FAILURE) || *endptr != '\0') {
-			fprintf(stderr,"Missing day on line %lu\n",current_line);
+			fprintf(stderr,"Missing day on line %llu\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,".csv file is missing day."
 				      	" File is corrupted, please check file",-1);
 			fclose(the_file);
@@ -133,7 +134,7 @@ unsigned char load_items(GtkListStore *model)
 		token = strsep_custom(&end,',');
 		/* if null character after last valid csv field, return */
 		if(!token) {
-			fprintf(stderr,".csv ended prematurely on line %lu, file is corrupted\n",current_line);
+			fprintf(stderr,".csv ended prematurely on line %llu, file is corrupted\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma."
 				      	" File is corrupted, please exit program and check file",-1);
 			fclose(the_file);
@@ -141,7 +142,7 @@ unsigned char load_items(GtkListStore *model)
 		}
 		/* if no ending comma for month field */
 		if(!end) {
-			fprintf(stderr,"Missing comma on line %lu\n",current_line);
+			fprintf(stderr,"Missing comma on line %llu\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma."
 				      	" File is corrupted, please check file",-1);
 			fclose(the_file);
@@ -149,7 +150,7 @@ unsigned char load_items(GtkListStore *model)
 		}
 		/* if month csv field is empty, return */
 		if(!(*token)) {
-			fprintf(stderr,"Missing month on line %lu\n",current_line);
+			fprintf(stderr,"Missing month on line %llu\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,".csv file is missing month."
 				      	" File is corrupted, please check file",-1);
 			fclose(the_file);
@@ -157,7 +158,7 @@ unsigned char load_items(GtkListStore *model)
 		}
 		number = strtoul(token,&endptr,10);
 		if(endptr == token || (validate_month(&number) == FAILURE) || *endptr != '\0') {
-			fprintf(stderr,"Missing month on line %lu\n",current_line);
+			fprintf(stderr,"Missing month on line %llu\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,".csv file is missing month."
 				      	" File is corrupted, please check file",-1);
 			fclose(the_file);
@@ -169,7 +170,7 @@ unsigned char load_items(GtkListStore *model)
 		token = strsep_custom(&end,',');
 		/* if null character after last valid csv field, return */
 		if(!token) {
-			fprintf(stderr,".csv ended prematurely on line %lu, file is corrupted\n",current_line);
+			fprintf(stderr,".csv ended prematurely on line %llu, file is corrupted\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma."
 				      	" File is corrupted, please exit program and check file",-1);
 			fclose(the_file);
@@ -177,7 +178,7 @@ unsigned char load_items(GtkListStore *model)
 		}
 		/* if no ending comma for year field */
 		if(!end) {
-			fprintf(stderr,"Missing comma on line %lu\n",current_line);
+			fprintf(stderr,"Missing comma on line %llu\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma."
 				      	" File is corrupted, please check file",-1);
 			fclose(the_file);
@@ -185,7 +186,7 @@ unsigned char load_items(GtkListStore *model)
 		}
 		/* if year csv field is empty, return */
 		if(!(*token)) {
-			fprintf(stderr,"Missing year on line %lu\n",current_line);
+			fprintf(stderr,"Missing year on line %llu\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,".csv file is missing year."
 				      	" File is corrupted, please check file",-1);
 			fclose(the_file);
@@ -193,7 +194,7 @@ unsigned char load_items(GtkListStore *model)
 		}
 		number = strtoul(token,&endptr,10);
 		if(endptr == token || (validate_year(&number) == FAILURE) || *endptr != '\0') {
-			fprintf(stderr,"Missing year on line %lu\n",current_line);
+			fprintf(stderr,"Missing year on line %llu\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,".csv file is missing year."
 				      	" File is corrupted, please check file",-1);
 			fclose(the_file);
@@ -205,7 +206,7 @@ unsigned char load_items(GtkListStore *model)
 		token = strsep_custom(&end,',');
 		/* if null character after last valid csv field, return */
 		if(!token) {
-			fprintf(stderr,".csv ended prematurely on line %lu, file is corrupted\n",current_line);
+			fprintf(stderr,".csv ended prematurely on line %llu, file is corrupted\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma."
 				      	" File is corrupted, please exit program and check file",-1);
 			fclose(the_file);
@@ -213,7 +214,7 @@ unsigned char load_items(GtkListStore *model)
 		}
 		/* if no ending comma for person field */
 		if(!end) {
-			fprintf(stderr,"Missing comma on line %lu\n",current_line);
+			fprintf(stderr,"Missing comma on line %llu\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma."
 				      	" File is corrupted, please check file",-1);
 			fclose(the_file);
@@ -221,7 +222,7 @@ unsigned char load_items(GtkListStore *model)
 		}
 		/* if empty person csv field, or person string doesn't validate, return */
 		if(validate_person(token) == FAILURE) {
-			fprintf(stderr,"Cannot parse person on %lu\n",current_line);
+			fprintf(stderr,"Cannot parse person on %llu\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,".csv file is missing properly formatted person."
 				      	" File is corrupted, please check file",-1);
 			fclose(the_file);
@@ -233,7 +234,7 @@ unsigned char load_items(GtkListStore *model)
 		token = strsep_custom(&end,',');
 		/* if null character after last valid csv field, return */
 		if(!token) {
-			fprintf(stderr,".csv ended prematurely on line %lu, file is corrupted\n",current_line);
+			fprintf(stderr,".csv ended prematurely on line %llu, file is corrupted\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma."
 				      	" File is corrupted, please exit program and check file",-1);
 			fclose(the_file);
@@ -241,7 +242,7 @@ unsigned char load_items(GtkListStore *model)
 		}
 		/* if no ending comma for method field */
 		if(!end) {
-			fprintf(stderr,"Missing comma on line %lu\n",current_line);
+			fprintf(stderr,"Missing comma on line %llu\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma."
 				      	" File is corrupted, please check file",-1);
 			fclose(the_file);
@@ -251,7 +252,7 @@ unsigned char load_items(GtkListStore *model)
 		/* if method is non empty, ie there isn't ,, in csv, then validate it for sanity */
 		if(*token) {
 			if(validate_method(token) == FAILURE) {
-				fprintf(stderr,"Cannot parse person on %lu\n",current_line);
+				fprintf(stderr,"Cannot parse person on %llu\n",current_line);
 				gtk_text_buffer_set_text(error_buffer,".csv file is missing properly formatted person."
 						"File is corrupted, please check file",-1);
 				fclose(the_file);
@@ -266,7 +267,7 @@ unsigned char load_items(GtkListStore *model)
 		token = strsep_custom(&end,'\n');
 		/* if null character after last valid csv field, return */
 		if(!token) {
-			fprintf(stderr,".csv ended prematurely on line %lu, file is corrupted\n",current_line);
+			fprintf(stderr,".csv ended prematurely on line %llu, file is corrupted\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma."
 				      	" File is corrupted, please exit program and check file",-1);
 			fclose(the_file);
@@ -274,7 +275,7 @@ unsigned char load_items(GtkListStore *model)
 		}
 		/* if no ending newline for amount field */
 		if(!end) {
-			fprintf(stderr,"Missing comma on line %lu\n",current_line);
+			fprintf(stderr,"Missing comma on line %llu\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma."
 				      	" File is corrupted, please check file",-1);
 			fclose(the_file);
@@ -282,7 +283,7 @@ unsigned char load_items(GtkListStore *model)
 		}
 		/* if amount csv field is empty, return */
 		if(!(*token)) {
-			fprintf(stderr,"Missing month on line %lu\n",current_line);
+			fprintf(stderr,"Missing month on line %llu\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,".csv file is missing month."
 				      	" File is corrupted, please check file",-1);
 			fclose(the_file);
@@ -290,7 +291,7 @@ unsigned char load_items(GtkListStore *model)
 		}
 		/* if empty person csv field, or amount string doesn't validate, return */
 		if(validate_amount(token,&amount_s) == FAILURE) {
-			fprintf(stderr,"Cannot parse person on %lu\n",current_line);
+			fprintf(stderr,"Cannot parse person on %llu\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,".csv file is missing properly formatted person."
 				      	"File is corrupted, please check file",-1);
 			fclose(the_file);
@@ -300,6 +301,7 @@ unsigned char load_items(GtkListStore *model)
 
 		snprintf(date_s,sizeof(date_s),"%u/%u/%u",day,month,year);
 
+		//gtk_widget_freeze_child_notify(GTK_WIDGET(tree_view));
 		gtk_list_store_insert_with_values(model, NULL, -1,
 						DATE_C, date_s,
 						PERSON_C, person_s,
@@ -308,9 +310,13 @@ unsigned char load_items(GtkListStore *model)
 						YEAR_C, year,
 						MONTH_C, month,
 						DAY_C, day,
-						SHOW_C, 1, /* 1 for, yes show in tree */
+						SHOW_C, 1,
 						-1);
-		//printf("processed a line of csv successfully\n");
+		//gtk_widget_thaw_child_notify(GTK_WIDGET(tree_view));
+
+		if(current_line % 1000 == 0) {
+			printf("Loaded %llu items from disk\n",current_line);
+		}
 
 	} /* end of for loop reading file */
 
