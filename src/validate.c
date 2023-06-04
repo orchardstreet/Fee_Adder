@@ -123,7 +123,7 @@ unsigned char validate_integer_digits(char **str_ptr,unsigned long long *number)
 		return SUCCESS;
 	}
 	*number = strtoull(*str_ptr,&endptr,10);
-	printf("strtuoll result: %llu\n",*number);
+	//printf("strtuoll result: %llu\n",*number);
 	if(endptr == *str_ptr) {
 		fprintf(stderr,"please enter a valid amount\n");
 		*number = 0;
@@ -136,7 +136,7 @@ unsigned char validate_integer_digits(char **str_ptr,unsigned long long *number)
 	*number = *number * pow_custom(10,DECIMAL_PLACES);
 	*str_ptr = endptr;
 
-	printf("ending character: %c\n",**str_ptr);
+	//printf("ending character: %c\n",**str_ptr);
 
 	/*hanld space after integer digits */
 	if(**str_ptr == ' ') {
@@ -179,7 +179,7 @@ unsigned char validate_amount(char *str_ptr, unsigned long long *number)
 	/* get integer digits */
 	if(string_length > MAX_AMOUNT_CHARS - 1) {
 		*number = 0;
-		printf("amount entry contains too many characters\n");
+		fprintf(stderr,"amount entry contains too many characters\n");
 		return FAILURE;
 	}
 	skip_whitespace(&str_ptr);

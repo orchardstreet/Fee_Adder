@@ -128,7 +128,7 @@ unsigned char load_items(GtkListStore *model)
 			return UNFINISHED;
 		}
 		day = (unsigned char) number;
-		printf("day: %u\n",day);
+		//printf("day: %u\n",day);
 		/* get month from file -------------------------------------------------------------------- */
 		token = strsep_custom(&end,',');
 		/* if null character after last valid csv field, return */
@@ -164,7 +164,7 @@ unsigned char load_items(GtkListStore *model)
 			return UNFINISHED;
 		}
 		month = (unsigned char) number;
-		printf("month: %u\n",month);
+		//printf("month: %u\n",month);
 		/* get year from file --------------------------------------------------------------------------- */
 		token = strsep_custom(&end,',');
 		/* if null character after last valid csv field, return */
@@ -200,7 +200,7 @@ unsigned char load_items(GtkListStore *model)
 			return UNFINISHED;
 		}
 		year = (unsigned int) number;
-		printf("year: %u\n",year);
+		//printf("year: %u\n",year);
 		/* get person from file --------------------------------------------------------------- */
 		token = strsep_custom(&end,',');
 		/* if null character after last valid csv field, return */
@@ -228,7 +228,7 @@ unsigned char load_items(GtkListStore *model)
 			return UNFINISHED;
 		}
 		person_s = token;
-		printf("person: %s\n",person_s);
+		//printf("person: %s\n",person_s);
 		/* get method from file ------------------------------------------ */
 		token = strsep_custom(&end,',');
 		/* if null character after last valid csv field, return */
@@ -261,7 +261,7 @@ unsigned char load_items(GtkListStore *model)
 		} else {/* else just keep method an empty string and put an empty string in liststore */
 			method_s = "";
 		}
-		printf("method: %s\n",method_s);
+		//printf("method: %s\n",method_s);
 		/* get amount from file -------------------------------------------------------------------- */
 		token = strsep_custom(&end,'\n');
 		/* if null character after last valid csv field, return */
@@ -296,7 +296,7 @@ unsigned char load_items(GtkListStore *model)
 			fclose(the_file);
 			return UNFINISHED;
 		}
-		printf("amount: %llu\n",amount_s);
+		//printf("amount: %llu\n",amount_s);
 
 		snprintf(date_s,sizeof(date_s),"%u/%u/%u",day,month,year);
 
@@ -310,7 +310,7 @@ unsigned char load_items(GtkListStore *model)
 						DAY_C, day,
 						SHOW_C, 1, /* 1 for, yes show in tree */
 						-1);
-		printf("processed a line of csv successfully\n");
+		//printf("processed a line of csv successfully\n");
 
 	} /* end of for loop reading file */
 

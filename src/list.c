@@ -43,7 +43,7 @@ unsigned char add_all_rows(GtkTreeModel *model)
 	do {
 		gtk_tree_model_get(model, &iter, SHOW_C,&is_visible,-1);
 		gtk_tree_model_get(model, &iter, AMOUNT_C, &item_amount, -1);
-		printf("item amount: %llu\n",item_amount);
+		//printf("item amount: %llu\n",item_amount);
 		if(amount_total + item_amount >= UINT64_MAX || amount_total + item_amount < amount_total) {
 			gtk_text_buffer_set_text(error_buffer,"Cannot add amount. Amount total out of range, should be between"
 					" 0 and UINT64_MAX",-1);
@@ -57,8 +57,8 @@ unsigned char add_all_rows(GtkTreeModel *model)
 
 	} while(gtk_tree_model_iter_next(model,&iter));
 
-	printf("filtered total paid: %llu\n",filtered_amount_total);
-	printf("total paid: %llu\n",amount_total);
+	//printf("filtered total paid: %llu\n",filtered_amount_total);
+	//printf("total paid: %llu\n",amount_total);
 	if(cents_to_string(amount_total,string_from_llu) == FAILURE)
 		return FAILURE;
 	gtk_label_set_text(GTK_LABEL(total_results_label), string_from_llu);
