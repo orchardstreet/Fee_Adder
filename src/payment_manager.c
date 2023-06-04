@@ -52,10 +52,6 @@ int main(int argc, char **argv)
 
 	/* Init GTK */
 	gtk_init(&argc,&argv);
-	
-	/* Temp debug info */
-	printf("Double has a precision of %d digits\n",LDBL_DIG);
-	printf("Columns: %d\n",TOTAL_COLUMNS);
 
 	/* Create vertically oriented box to pack program widgets into */
 	box = gtk_box_new(GTK_ORIENTATION_VERTICAL,10);

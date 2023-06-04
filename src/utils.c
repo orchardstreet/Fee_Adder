@@ -87,8 +87,8 @@ void scroll_to_end (GtkWidget *widget, GdkRectangle *allocate, gpointer user_dat
 unsigned char check_system_compatibility(void)
 {
 
-	printf("size of unsigned char: %zu\nsize of unsigned int %zu\n"
-			"size of unsigned long: %zu\nsize of unsigned long long%zu\n"
+	printf("Size of unsigned char: %zu\nSize of unsigned int: %zu\n"
+			"Size of unsigned long: %zu\nSize of unsigned long long: %zu\n"
 			,sizeof(unsigned char),sizeof(unsigned int)
 			,sizeof(unsigned long),sizeof(unsigned long long));
 
