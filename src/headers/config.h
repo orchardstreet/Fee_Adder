@@ -27,5 +27,6 @@ extern GtkWidget *error_widget;
 extern unsigned long long filtered_amount_total;
 extern unsigned long long amount_total;
 extern char filename[FILENAME_SIZE];
+extern unsigned char is_scrolling;
 
 #endif

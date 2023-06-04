@@ -75,13 +75,18 @@ gboolean keypress_function(GtkWidget *widget, GdkEventKey *event, gpointer data)
 	return FALSE;
 }
 
-void scroll_to_end (GtkWidget *widget, GdkRectangle *allocate, gpointer user_data)
+void scroll_to_end (void)
 {
-	GtkAdjustment *adjustment = gtk_scrolled_window_get_vadjustment (
-	GTK_SCROLLED_WINDOW (scrolled_window));
-	double upper = gtk_adjustment_get_upper (adjustment);
-	double page_size = gtk_adjustment_get_page_size (adjustment);
-	gtk_adjustment_set_value (adjustment, upper - page_size - 0);
+	if(is_scrolling){
+		while(gtk_events_pending()) {
+			gtk_main_iteration();
+		}
+		GtkAdjustment *adjustment = gtk_scrolled_window_get_vadjustment (
+		GTK_SCROLLED_WINDOW (scrolled_window));
+		double upper = gtk_adjustment_get_upper (adjustment);
+		double page_size = gtk_adjustment_get_page_size (adjustment);
+		gtk_adjustment_set_value (adjustment, upper - page_size - 0);
+	}
 }
 
 unsigned char check_system_compatibility(void)

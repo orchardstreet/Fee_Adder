@@ -5,6 +5,7 @@
 #include "headers/list.h"
 #include "headers/validate.h"
 #include "headers/utils.h"
+#include "headers/config.h"
 
 /* Render each row in amount column as full decimal rather than cents */
 void amount_cell_data_func(GtkTreeViewColumn *col,
@@ -117,6 +118,10 @@ void do_add(GtkWidget *widget, gpointer model)
 					DAY_C, day_s,
 					SHOW_C, 1, /* 1 for, yes show in tree */
 					-1);
+
+	is_scrolling = 1;
+	scroll_to_end();
+	is_scrolling = 0;
 
 	gtk_text_buffer_set_text(error_buffer," ",-1);
 	gtk_entry_set_text(GTK_ENTRY(date_entry), "");

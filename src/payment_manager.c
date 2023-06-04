@@ -32,6 +32,7 @@ GtkWidget *window;
 unsigned long long filtered_amount_total;
 unsigned long long amount_total;
 char filename[FILENAME_SIZE] = "purchase_log.csv";
+unsigned char is_scrolling = 0;
 
 
 
@@ -174,7 +175,7 @@ int main(int argc, char **argv)
 	/* set style for scrolled window */
 	GtkStyleContext *table_context = gtk_widget_get_style_context(scrolled_window);
 	gtk_style_context_add_class(table_context,"custom_table");
-    gtk_widget_show (scrolled_window);
+    //gtk_widget_show (scrolled_window);
 
 	/* Create liststore for table */
 	model = gtk_list_store_new(
@@ -393,9 +394,11 @@ int main(int argc, char **argv)
 	gtk_container_add(GTK_CONTAINER(window),box);
 
 	/* Show everything */
-	gtk_widget_show_all(box);
-	gtk_widget_show_all(scrolled_window);
 	gtk_widget_show_all(window);
+	is_scrolling = 1;
+	scroll_to_end();
+	is_scrolling = 0;
+
 	gtk_main();
 
 	return 0;

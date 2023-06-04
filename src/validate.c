@@ -51,8 +51,8 @@ unsigned char cents_to_string(unsigned long long number, char *str) {
 		return FAILURE;
 	}
 	right_side_offset = DECIMAL_PLACES - num_digits_right_side;
-	printf("offset: %u\n",right_side_offset);
-	printf("left: %llu",MAX_AMOUNT_CHARS - retval - 1 - right_side_offset);
+	//printf("offset: %u\n",right_side_offset);
+	//printf("left: %llu",MAX_AMOUNT_CHARS - retval - 1 - right_side_offset);
 	if(MAX_AMOUNT_CHARS - retval - 1 - right_side_offset < 0) {
 		fprintf(stderr,"no space to hold fractional digits in string\n");
 		gtk_text_buffer_set_text(error_buffer,"no space to hold fractional digits in string\n",-1);
