@@ -1,3 +1,4 @@
+/* TODO add paid (G_TYPE_BOOLEAN), date_sort (G_TYPE_STRING), and trans_id (G_TYPE_UINT64) columns */
 /* TODO add paid this month column */
 /* TODO change %ld to %llu everywhere!!! */
 /* TODO launch external window after filters button */
@@ -261,6 +262,9 @@ int main(int argc, char **argv)
 		G_TYPE_UINT,   /* fourth column, year, YEAR_C */
 		G_TYPE_UCHAR,   /* fifth column, month, MONTH_C */
 		G_TYPE_UCHAR,   /* sixth column, day, DAY_C */
+		G_TYPE_BOOLEAN,  /* seventh column, paid, PAID_C */
+		G_TYPE_UINT64,  /* eighth column, date sort DATE_SORT_C */
+		G_TYPE_UINT64, /* ninth column, transaction id, TRANS_ID_C */
 		G_TYPE_BOOLEAN  /* 1 for show, 0 for hide */
 		);
 

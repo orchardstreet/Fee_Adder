@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <gtk/gtk.h>
+#include <time.h>
 #include "headers/validate.h"
 #include "headers/config.h"
 #include "headers/utils.h"
@@ -77,10 +78,54 @@ unsigned char validate_month(unsigned long *number)
 	return SUCCESS;
 }
 
+unsigned char two_digits_year_to_five_digits_year(unsigned int *short_year) {
+
+    /* init variables */
+    signed int year;
+    /* get UNIX epoch time in seconds */
+    time_t epoch = time(NULL);
+    /* create tm struct with unix epoch time (contains year) */
+    struct tm *current_time = localtime(&epoch);
+    /* get year from tm struct */
+    year = (signed int) current_time->tm_year;
+
+    /* year is a signed int, so check for negative.
+     * Also, year variable needs to be a positive signed int for
+     * the later truncate-to-0 to work during division
+     * This is necessary for c89/c90 (also works with all later C standards) */
+    if(year < 0)
+        return FAILURE;
+    /* make sure short year format is two digits */
+    if(*short_year > 100)
+        return FAILURE;
+    /* tm_year is only since 1900, so add 1900 */
+    year = year + 1900;
+    printf("number: %d\n",year);
+    if(year > (MAX_YEAR_NUMBER - 99))
+        return FAILURE;
+    /* subtract last two decimal places from current year, through truncate-to-0 during division */
+    year = year / 100;
+    year = year * 100;
+    /* add short year amount to above number */
+    *short_year += (unsigned int) year;
+    if(*short_year > MAX_YEAR_NUMBER)
+        return FAILURE;
+    return SUCCESS;
+
+}
+
 unsigned char validate_year(unsigned long *number)
 {
+	unsigned int short_year;
 	if(*number < 0 || *number > MAX_YEAR_NUMBER)
 		return FAILURE;
+	/* store year in liststore and save file as full year no matter what */
+	if(*number < 100) {
+		short_year = *number;
+		if(two_digits_year_to_five_digits_year(&short_year) == FAILURE)
+			return FAILURE;
+		*number = (unsigned long) short_year;
+	}
 	return SUCCESS;
 }
 

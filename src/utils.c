@@ -113,7 +113,7 @@ unsigned char check_system_compatibility(void)
 		fprintf(stderr,"size of unsigned char must equal 1, please exit to avoid data issues\n");
         return FAILURE;
 	}
-	if(sizeof(unsigned int) != 4) {
+	if(sizeof(unsigned int) != 4 || sizeof(signed int) != 4 || sizeof(int) !=  4) {
 		gtk_text_buffer_set_text(error_buffer,"size of unsigned int must equal 4, please exit to avoid data issues\n",-1);
 		fprintf(stderr,"size of unsigned int must equal 4, please exit to avoid data issues\n");
         return FAILURE;

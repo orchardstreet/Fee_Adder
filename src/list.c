@@ -87,6 +87,7 @@ void do_add(GtkWidget *widget, gpointer model)
 	unsigned int year_s;
 	unsigned char month_s;
 	unsigned char day_s;
+	char date_s[MAX_DATE_CHARS] = {0};
 
 	if(validate_date(date_ptr,&year_s,&month_s,&day_s) == FAILURE) {
 		return;
@@ -108,8 +109,12 @@ void do_add(GtkWidget *widget, gpointer model)
 		return;
 	}
 
+	/* convert validated date numbers to readable text,
+	 * necessary to display years as full years, also removes whitespace etc */
+	snprintf(date_s,sizeof(date_s),"%u/%u/%u",day_s,month_s,year_s);
+
 	gtk_list_store_insert_with_values(model, NULL, -1,
-					DATE_C, date_ptr,
+					DATE_C, date_s,
 					PERSON_C, person_ptr,
 					PAYMENT_METHOD_C, method_ptr,
 					AMOUNT_C, number,

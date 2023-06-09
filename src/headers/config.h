@@ -4,7 +4,7 @@
 
 enum exit_codes {SUCCESS,FAILURE,UNFINISHED,FINISHED};
 enum status {NONE, START, FINISH};
-enum columns {DATE_C, PERSON_C, PAYMENT_METHOD_C, AMOUNT_C, YEAR_C, MONTH_C, DAY_C, SHOW_C, TOTAL_COLUMNS};
+enum columns {DATE_C, PERSON_C, PAYMENT_METHOD_C, AMOUNT_C, YEAR_C, MONTH_C, DAY_C, PAID_C, DATE_SORT_C, TRANS_ID_C, SHOW_C, TOTAL_COLUMNS};
 
 #define DECIMAL_PLACES 2 /* how many decimal places to the right of the decimal we will parse */ /* should be adjustable */
 #define MAX_ENTRIES 100000 /* unused */
@@ -16,9 +16,9 @@ enum columns {DATE_C, PERSON_C, PAYMENT_METHOD_C, AMOUNT_C, YEAR_C, MONTH_C, DAY
 #define MAX_YEAR_CHARS 6 /* cannot exceed number of digits of MAX_YEAR_NUMBER + 1 or '\0' */
 #define MAX_DAY_CHARS 4 /* cannot exceed number of digits of MAX_DAY_NUMBER + 1 for '\0' */
 #define MAX_MONTH_CHARS 4 /* cannot exceed number of digits of MAX_MONTH_NUMBER + 1 for '\0' */
-#define MAX_DAY_NUMBER 254 /* cannot exceed UCHAR_MAX, MAX_DAY_CHARS is number of digits of this + 1 for '\0' */
-#define MAX_MONTH_NUMBER 254 /* cannot exceed UCHAR_MAX, MAX_MONTH_CHARS is number of digits of this + 1 for '\0' */
-#define MAX_YEAR_NUMBER 65534 /* cannot exceed UINT_MAX, MAX_YEAR_CHARS is number of digits of this + 1 for '\0' */
+#define MAX_DAY_NUMBER 99 /* cannot exceed UCHAR_MAX, MAX_DAY_CHARS is number of digits of this + 1 for '\0' */
+#define MAX_MONTH_NUMBER 99 /* cannot exceed UCHAR_MAX, MAX_MONTH_CHARS is number of digits of this + 1 for '\0' */
+#define MAX_YEAR_NUMBER 65534 /* cannot exceed USHORT_MAX, MAX_YEAR_CHARS is number of digits of this + 1 for '\0' */
 
 extern GtkWidget *amount_entry, *date_entry, *person_entry, *method_entry, *error_widget, *scrolled_window,
 	*total_filtered_results_label, *total_results_label, *window;
