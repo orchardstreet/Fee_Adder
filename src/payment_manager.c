@@ -50,9 +50,10 @@ int main(int argc, char **argv)
 	GtkListStore *model;
 	GtkTreeModel *filter;
 
-
 	/* Init GTK */
 	gtk_init(&argc,&argv);
+
+	printf("\n~~~~~~~ Payment manager 0.1 ~~~~~~~\n\n");
 
 	/* Create vertically oriented box to pack program widgets into */
 	box = gtk_box_new(GTK_ORIENTATION_VERTICAL,10);
@@ -284,8 +285,14 @@ int main(int argc, char **argv)
 	/* Add box to window */
 	gtk_container_add(GTK_CONTAINER(window),box);
 
+
 	/* Load items */
-	load_items(model);
+	printf("Loading file from disk...\n");
+	if(load_items(model) == SUCCESS) {
+		printf("[SUCCESS] file items loaded successfully\n\n");
+	} else {
+		printf("[FAILURE] file could not be loaded successfully\n\n");
+	}
 
 	/* Create sorted model */
 	GtkTreeModel *sorted_model = gtk_tree_model_sort_new_with_model(filter);
@@ -387,11 +394,10 @@ int main(int argc, char **argv)
 
 
 
-	printf("Fee adder 0.1\n");
 	
 	//gtk_tree_view_set_fixed_height_mode(GTK_TREE_VIEW(tree_view,TRUE);
 	if(check_system_compatibility() == SUCCESS) {
-		printf("Using a compatible system, hooray\n");
+		printf("[SUCCESS] Using a compatible system\n\n");
 	}
 	/* load items from csv file into liststore, treestore, and treeview */
 

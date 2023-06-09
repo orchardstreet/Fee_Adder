@@ -92,7 +92,7 @@ void scroll_to_end (void)
 unsigned char check_system_compatibility(void)
 {
 
-	printf("Size of unsigned char: %zu\nSize of unsigned int: %zu\n"
+	printf("Checking system compatibility...\nSize of unsigned char: %zu\nSize of unsigned int: %zu\n"
 			"Size of unsigned long: %zu\nSize of unsigned long long: %zu\n"
 			,sizeof(unsigned char),sizeof(unsigned int)
 			,sizeof(unsigned long),sizeof(unsigned long long));

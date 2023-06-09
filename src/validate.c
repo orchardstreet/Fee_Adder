@@ -121,7 +121,7 @@ unsigned char validate_year(unsigned long *number)
 		return FAILURE;
 	/* store year in liststore and save file as full year no matter what */
 	if(*number < 100) {
-		short_year = *number;
+		short_year = (unsigned int) *number;
 		if(two_digits_year_to_five_digits_year(&short_year) == FAILURE)
 			return FAILURE;
 		*number = (unsigned long) short_year;

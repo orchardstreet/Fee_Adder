@@ -43,7 +43,6 @@ unsigned char load_items(GtkListStore *model)
 	}
 
 	snprintf(finished_message,sizeof(finished_message),"Finished loading file at: %s",filename);
-	printf("Loading file from disk\n");
 
 	for(;current_line < ULONG_MAX;current_line++) {
 
@@ -222,7 +221,7 @@ unsigned char load_items(GtkListStore *model)
 		}
 		/* if empty person csv field, or person string doesn't validate, return */
 		if(validate_person(token) == FAILURE) {
-			fprintf(stderr,"Cannot parse person on %llu\n",current_line);
+			fprintf(stderr,"Cannot parse person on %llu of csv\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,".csv file is missing properly formatted person."
 				      	" File is corrupted, please check file",-1);
 			fclose(the_file);
@@ -252,9 +251,9 @@ unsigned char load_items(GtkListStore *model)
 		/* if method is non empty, ie there isn't ,, in csv, then validate it for sanity */
 		if(*token) {
 			if(validate_method(token) == FAILURE) {
-				fprintf(stderr,"Cannot parse person on %llu\n",current_line);
-				gtk_text_buffer_set_text(error_buffer,".csv file is missing properly formatted person."
-						"File is corrupted, please check file",-1);
+				fprintf(stderr,"Cannot parse method on line %llu of csv\n",current_line);
+				gtk_text_buffer_set_text(error_buffer,".csv file is missing properly formatted method."
+						" File is corrupted, please check file",-1);
 				fclose(the_file);
 				return UNFINISHED;
 			}
@@ -291,9 +290,9 @@ unsigned char load_items(GtkListStore *model)
 		}
 		/* if empty person csv field, or amount string doesn't validate, return */
 		if(validate_amount(token,&amount_s) == FAILURE) {
-			fprintf(stderr,"Cannot parse person on %llu\n",current_line);
-			gtk_text_buffer_set_text(error_buffer,".csv file is missing properly formatted person."
-				      	"File is corrupted, please check file",-1);
+			fprintf(stderr,"Cannot parse amount on line %llu of csv\n",current_line);
+			gtk_text_buffer_set_text(error_buffer,".csv file is missing properly formatted amount."
+				      	" File is corrupted, please check file",-1);
 			fclose(the_file);
 			return UNFINISHED;
 		}
