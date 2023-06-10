@@ -1,12 +1,7 @@
-/* TODO add paid (G_TYPE_BOOLEAN), date_sort (G_TYPE_STRING), and trans_id (G_TYPE_UINT64) columns */
-/* TODO add paid this month column */
 /* TODO change %ld to %llu everywhere!!! */
 /* TODO launch external window after filters button */
-/* TODO put border around entire value entry section, to remove awkward look */
 /* TODO filter out special characters from input */
 /* TODO add switch below 'set filters' */
-/* TODO see where two numbers added messes up total at bottom, and adjust the range
- * of acceptable values in do_add accordingly */
 /* TODO make totals BOLD and BIG */
 #include <stdlib.h>
 #include <stdio.h>
