@@ -3,6 +3,7 @@
 #include <string.h>
 #include <gtk/gtk.h>
 #include <time.h>
+#include <ctype.h>
 #include "headers/validate.h"
 #include "headers/config.h"
 #include "headers/utils.h"
@@ -272,6 +273,79 @@ unsigned char validate_amount(char *str_ptr, unsigned long long *number)
 	return SUCCESS;
 
 }
+unsigned char validate_paid_status(char *text,unsigned char *paid_bool)
+{
+	/* init variables */
+	char answer[4] = {0};
+	char *answer_ptr = answer;
+	int i;
+	*paid_bool = 0;
+
+	if(!strlen(text)) {
+		fprintf(stderr,"Missing paid status\n");
+		gtk_text_buffer_set_text(error_buffer,"Missing paid status",-1);
+		return FAILURE;
+	}
+	if(strlen(text) > MAX_PAID_CHARS - 1)  {
+		fprintf(stderr,"Too many characters in paid status\n");
+		gtk_text_buffer_set_text(error_buffer,"Too many characters in paid status",-1);
+		return FAILURE;
+	}
+	if(strchr(text,',')) {
+		fprintf(stderr,"Customer name cannot contain commas\n");
+		gtk_text_buffer_set_text(error_buffer,"Customer name cannot contain commas",-1);
+		return FAILURE;
+	}
+	skip_whitespace(&text);
+	if(!(*text)) {
+		fprintf(stderr,"Missing paid status\n");
+		gtk_text_buffer_set_text(error_buffer,"Missing paid status",-1);
+		return FAILURE;
+	}
+	snprintf(answer,sizeof(answer),"%s",text);
+	for(;(*answer_ptr >= 'a' && *answer_ptr <= 'z') || (*answer_ptr >= 'A' && *answer_ptr <= 'Z');answer_ptr++) {}
+	printf("answer: %s\n",answer);
+	printf("difference: %llu\n",answer_ptr - answer);
+	if(answer_ptr - answer != 2 && answer_ptr - answer != 3) {
+		fprintf(stderr,"Must use 2 or 3 ascii characters for 'yes'/'no' in paid status field\n");
+		gtk_text_buffer_set_text(error_buffer,"Must use 2 or 3 ascii characters for 'yes'/'no' in paid status field",-1);
+		return FAILURE;
+	}
+	/* move text cursor pass yes or no */
+	text += answer_ptr - answer;
+	skip_whitespace(&text);
+	/* if there is text after yes/no and any whitespace after, then fail */
+	if(*text) {
+		fprintf(stderr,"Garbage data after 'yes' or 'no' in 'paid status' csv field\n");
+		gtk_text_buffer_set_text(error_buffer,"Garbage data after yes or no in 'paid status' csv field",-1);
+		return FAILURE;
+	}
+	/* convert to lowercase */
+	for(i=0;i < answer_ptr - answer;i++) {
+		answer[i] = tolower(answer[i]);
+	}
+	if(answer_ptr - answer == 2) {
+		/* if wrong answer */
+		if(strncmp(answer,"no",2)) {
+			fprintf(stderr,"Paid status is incorrect, should be 'yes' or 'no'\n");
+			gtk_text_buffer_set_text(error_buffer,"Paid status is incorrect, should be 'yes' or 'no'",-1);
+			return FAILURE;
+		}
+		/* csv file contained a valid 'no' so paid_bool is false and exit SUCCESS */
+		*paid_bool = 0;
+	} else if (answer_ptr - answer == 3) {
+		/* if wrong answer */
+		if(strncmp(answer,"yes",3)) {
+			fprintf(stderr,"Paid status is incorrect, should be 'yes' or 'no'\n");
+			gtk_text_buffer_set_text(error_buffer,"Paid status is incorrect, should be 'yes' or 'no'",-1);
+			return FAILURE;
+		}
+		/* csv file contained a valid 'yes' so paid_bool is true and exit SUCCESS */
+		*paid_bool = 1;
+	}
+
+	return SUCCESS;
+}
 unsigned char validate_person(char *text)
 {
 	if(!strlen(text)) {
@@ -315,6 +389,16 @@ unsigned char validate_method(char *text)
 	}
 	return SUCCESS;
 }
+
+/* turn year/month/day variables into an unsigned int of format : yyyyymmdd
+ * this is so the treeview can sort the dates accurately */
+void year_month_day_to_sortable_date(unsigned int year_i, unsigned char month_s, unsigned char day_s, unsigned int *sortable_date) {
+	unsigned int month_i = (unsigned int) month_s;
+	unsigned int day_i = (unsigned int) day_s;
+	*sortable_date = (year_i * 10000) + (month_i * 100) + day_i;
+	printf("sortable date: %u\n",*sortable_date);
+}
+
 unsigned char validate_date (char *text, unsigned int *year_s, unsigned char *month_s, unsigned char *day_s)
 {
 	unsigned long number;

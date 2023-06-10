@@ -8,6 +8,13 @@
 #include "headers/validate.h"
 #include "headers/utils.h"
 
+void paid_bool_to_paid_string(unsigned char is_paid, char *str) {
+	if(is_paid) {
+		strcpy(str,"yes");
+	} else {
+		strcpy(str,"no");
+	}
+}
 unsigned char load_items(GtkListStore *model)
 {
 
@@ -28,8 +35,10 @@ unsigned char load_items(GtkListStore *model)
 	unsigned char day;
 	unsigned char month;
 	unsigned int year;
+	unsigned int sortable_date = 0;
 	char *person_s;
 	char *method_s;
+	unsigned char paid_s = 0;
 
 	snprintf(error_message,sizeof(error_message),"Cannot open file at: %s",filename);
 
@@ -90,7 +99,7 @@ unsigned char load_items(GtkListStore *model)
 			return UNFINISHED;
 		}
 		if(current_line == 0) {
-			if(strcmp(line,"Day,Month,Year,Customer,Method,Amount\n")) {
+			if(strcmp(line,"Day,Month,Year,Customer,Method,Amount,Paid\n")) {
 				fprintf(stderr,"Invalid csv header, corrupt file %llu\n",current_line);
 				gtk_text_buffer_set_text(error_buffer,"Invalid csv header, corrupt file",-1);
 				fclose(the_file);
@@ -263,7 +272,7 @@ unsigned char load_items(GtkListStore *model)
 		}
 		//printf("method: %s\n",method_s);
 		/* get amount from file -------------------------------------------------------------------- */
-		token = strsep_custom(&end,'\n');
+		token = strsep_custom(&end,',');
 		/* if null character after last valid csv field, return */
 		if(!token) {
 			fprintf(stderr,".csv ended prematurely on line %llu, file is corrupted\n",current_line);
@@ -272,7 +281,7 @@ unsigned char load_items(GtkListStore *model)
 			fclose(the_file);
 			return UNFINISHED;
 		}
-		/* if no ending newline for amount field */
+		/* if no ending comma for amount field */
 		if(!end) {
 			fprintf(stderr,"Missing comma on line %llu\n",current_line);
 			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma."
@@ -296,9 +305,38 @@ unsigned char load_items(GtkListStore *model)
 			fclose(the_file);
 			return UNFINISHED;
 		}
-		//printf("amount: %llu\n",amount_s);
+		/* get paid status from file ------------------------------------------ */
+		token = strsep_custom(&end,'\n');
+		/* if null character after last valid csv field, return */
+		if(!token) {
+			fprintf(stderr,".csv ended prematurely on line %llu, file is corrupted\n",current_line);
+			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma."
+				      	" File is corrupted, please exit program and check file",-1);
+			fclose(the_file);
+			return UNFINISHED;
+		}
+		/* if no ending endline for method field */
+		if(!end) {
+			fprintf(stderr,"Missing endline on line %llu\n",current_line);
+			gtk_text_buffer_set_text(error_buffer,".csv file is missing endline."
+				      	" File is corrupted, please check file",-1);
+			fclose(the_file);
+			return UNFINISHED;
+		}
+		/* if empty paid status csv field, or paid status string doesn't validate, return */
+		if(validate_paid_status(token,&paid_s) == FAILURE) {
+			fprintf(stderr,"Cannot parse paid status on line %llu of csv\n",current_line);
+			gtk_text_buffer_set_text(error_buffer,".csv file is missing properly formatted paid status."
+				      	" File is corrupted, please check file",-1);
+			fclose(the_file);
+			return UNFINISHED;
+		}
 
-		snprintf(date_s,sizeof(date_s),"%u/%u/%u",day,month,year);
+		/* create human readable date */
+		snprintf(date_s,sizeof(date_s),"%02u/%02u/%u",day,month,year);
+		/* create sortable date */
+		year_month_day_to_sortable_date(year, month,day,&sortable_date);
+		printf("sssortable date: %u\n",sortable_date);
 
 		//gtk_widget_freeze_child_notify(GTK_WIDGET(tree_view));
 		gtk_list_store_insert_with_values(model, NULL, -1,
@@ -309,6 +347,8 @@ unsigned char load_items(GtkListStore *model)
 						YEAR_C, year,
 						MONTH_C, month,
 						DAY_C, day,
+						PAID_C,paid_s,
+						DATE_SORT_C,sortable_date,
 						SHOW_C, 1,
 						-1);
 		//gtk_widget_thaw_child_notify(GTK_WIDGET(tree_view));
@@ -325,7 +365,6 @@ unsigned char load_items(GtkListStore *model)
 	return SUCCESS;
 
 }
-
 
 void save_items(GtkWidget *widget, gpointer model_void) {
 	GtkTreeModel *model = (GtkTreeModel *)model_void;
@@ -351,6 +390,10 @@ void save_items(GtkWidget *widget, gpointer model_void) {
 	guint64 gitem_amount;
 	unsigned long long item_amount;
 	char amount_str[MAX_AMOUNT_CHARS] = {0};
+	/* paid status */
+	gboolean gis_paid = 0;
+	unsigned char is_paid_s = 0;
+	char is_paid_str[MAX_PAID_CHARS] = {0};
 	FILE *the_file;
 
 	snprintf(error_message,sizeof(error_message),"Cannot create or open file at %s",filename);
@@ -364,7 +407,7 @@ void save_items(GtkWidget *widget, gpointer model_void) {
 	  	return;
 	}
 	snprintf(save_message,sizeof(save_message),"File saved at %s",filename);
-	fprintf(the_file,"Day,Month,Year,Customer,Method,Amount\n");
+	fprintf(the_file,"Day,Month,Year,Customer,Method,Amount,Paid\n");
 
 	if(gtk_tree_model_get_iter_first(model,&iter) == FALSE) {
 		gtk_text_buffer_set_text(error_buffer,save_message,-1);
@@ -396,8 +439,11 @@ void save_items(GtkWidget *widget, gpointer model_void) {
 		if(cents_to_string(item_amount,amount_str) == FAILURE) {
 			strcpy(amount_str,"0");
 		}
+		gtk_tree_model_get(model, &iter, PAID_C, &gis_paid, -1);
+		is_paid_s = (unsigned char) gis_paid;
+		paid_bool_to_paid_string(is_paid_s,is_paid_str);
 
-		fprintf(the_file,"%u,%u,%u,%s,%s,%s\n",day_s,month_s,year_s,name_s,method_s,amount_str);
+		fprintf(the_file,"%u,%u,%u,%s,%s,%s,%s\n",day_s,month_s,year_s,name_s,method_s,amount_str,is_paid_str);
 	} while(gtk_tree_model_iter_next(model,&iter));
 
 
