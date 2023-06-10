@@ -67,14 +67,14 @@ unsigned char cents_to_string(unsigned long long number, char *str) {
 }
 unsigned char validate_day(unsigned long *number)
 {
-	if(*number < 0 || *number > MAX_DAY_NUMBER)
+	if(*number > MAX_DAY_NUMBER)
 		return FAILURE;
 	return SUCCESS;
 }
 
 unsigned char validate_month(unsigned long *number)
 {
-	if(*number < 0 || *number > MAX_MONTH_NUMBER)
+	if(*number > MAX_MONTH_NUMBER)
 		return FAILURE;
 	return SUCCESS;
 }
@@ -118,7 +118,7 @@ unsigned char two_digits_year_to_five_digits_year(unsigned int *short_year) {
 unsigned char validate_year(unsigned long *number)
 {
 	unsigned int short_year;
-	if(*number < 0 || *number > MAX_YEAR_NUMBER)
+	if(*number > MAX_YEAR_NUMBER)
 		return FAILURE;
 	/* store year in liststore and save file as full year no matter what */
 	if(*number < 100) {
