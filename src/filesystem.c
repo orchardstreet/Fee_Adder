@@ -22,7 +22,7 @@ unsigned char load_items(GtkListStore *model)
 	FILE *the_file;
 	char * retval;
 	char line[MAX_DAY_CHARS + MAX_MONTH_CHARS + MAX_YEAR_CHARS +
-		 MAX_METHOD_CHARS + MAX_PERSON_CHARS + MAX_AMOUNT_CHARS + 20];
+		 MAX_METHOD_CHARS + MAX_PERSON_CHARS + MAX_AMOUNT_CHARS + MAX_PAID_CHARS + 20];
 	char finished_message[FILENAME_SIZE + 35] = {0};
 	char error_message[FILENAME_SIZE + 35] = {0};
 	char *newline_location;
