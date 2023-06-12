@@ -27,6 +27,11 @@ struct treeview_models {
 	GtkListStore *liststore;
 };
 
+struct windows_list {
+	GtkWidget *main_window;
+	GtkWidget *filter_window;
+};
+
 extern GtkWidget *amount_entry, *date_entry, *person_entry, *method_entry, *paid_check_button, *error_widget, *scrolled_window, *total_filtered_results_label, *total_results_label, *window;
 extern GtkTextBuffer *error_buffer;
 extern GtkWidget *error_widget;
@@ -34,5 +39,6 @@ extern unsigned long long filtered_amount_total;
 extern unsigned long long amount_total;
 extern char filename[FILENAME_SIZE];
 extern unsigned char is_scrolling;
+extern struct windows_list windows;
 
 #endif

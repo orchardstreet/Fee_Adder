@@ -1,4 +1,4 @@
-add_executable(Payment_Manager filesystem.c list.c payment_manager.c utils.c validate.c)
+add_executable(Payment_Manager filesystem.c list.c payment_manager.c utils.c validate.c filter.c)
 TARGET_LINK_LIBRARIES( Payment_Manager ${CMAKE_THREAD_LIBS_INIT} ${GTK_LIBRARIES} )
 
 

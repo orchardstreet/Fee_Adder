@@ -16,6 +16,7 @@
 #include "headers/utils.h"
 #include "headers/filesystem.h"
 #include "headers/list.h"
+#include "headers/filter.h"
 
 /* Init global variables */
 GtkWidget *amount_entry, *date_entry, *person_entry, *method_entry, *paid_check_button;
@@ -24,11 +25,11 @@ GtkWidget *error_widget;
 GtkWidget *scrolled_window;
 GtkWidget *total_filtered_results_label;
 GtkWidget *total_results_label;
-GtkWidget *window;
 unsigned long long filtered_amount_total;
 unsigned long long amount_total;
 char filename[FILENAME_SIZE] = "purchase_log.csv";
 unsigned char is_scrolling = 0;
+struct windows_list windows;
 
 
 
@@ -59,14 +60,14 @@ int main(int argc, char **argv)
 	gtk_style_context_add_class(window_context,"custom_window");
 
 	/* Create window, set title, border width, and size */
-	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_title (GTK_WINDOW(window) , "Payment Manager" );
-	gtk_container_set_border_width (GTK_CONTAINER(window),10); 
-	gtk_widget_add_events(window, GDK_KEY_PRESS_MASK);
-	gtk_window_set_default_size ( GTK_WINDOW(window), 800, 580);
+	windows.main_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_title (GTK_WINDOW(windows.main_window) , "Payment Manager" );
+	gtk_container_set_border_width (GTK_CONTAINER(windows.main_window),10);
+	gtk_widget_add_events(windows.main_window, GDK_KEY_PRESS_MASK);
+	gtk_window_set_default_size ( GTK_WINDOW(windows.main_window), 800, 580);
 
 	/* Destroy window on close */
-	g_signal_connect(window,"destroy",G_CALLBACK(gtk_main_quit),NULL);
+	g_signal_connect(windows.main_window,"destroy",G_CALLBACK(gtk_main_quit),NULL);
 
 	/* init CSS */
 	char *app_css =  "window {background-color:#f3f3f3}"
@@ -291,7 +292,7 @@ int main(int argc, char **argv)
 	models.filtered_model = filter;
 
 	/* Add box to window */
-	gtk_container_add(GTK_CONTAINER(window),box);
+	gtk_container_add(GTK_CONTAINER(windows.main_window),box);
 
 
 	/* Load items */
@@ -427,11 +428,12 @@ int main(int argc, char **argv)
 	/* After clicking save, call 'save_items */
 	g_signal_connect(save_button,"clicked",G_CALLBACK(save_items),GTK_TREE_MODEL(model));
 	/* After pressing a keyboard button, called 'key_press_event */
-	g_signal_connect (G_OBJECT (window), "key_press_event", G_CALLBACK (keypress_function), NULL);
+	g_signal_connect (G_OBJECT (windows.main_window), "key_press_event", G_CALLBACK (keypress_function), NULL);
+	g_signal_connect (filter_button, "clicked", G_CALLBACK (create_filter_window), NULL);
 
 	//gtk_tree_view_set_model(GTK_TREE_VIEW(tree_view),NULL);
 	/* Show everything */
-	gtk_widget_show_all(window);
+	gtk_widget_show_all(windows.main_window);
 	is_scrolling = 1;
 	scroll_to_end();
 	is_scrolling = 0;
