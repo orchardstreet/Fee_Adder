@@ -21,10 +21,10 @@ enum columns {DATE_C, PERSON_C, PAYMENT_METHOD_C, AMOUNT_C, YEAR_C, MONTH_C, DAY
 #define MAX_YEAR_NUMBER 65534 /* cannot exceed USHORT_MAX, MAX_YEAR_CHARS is number of digits of this + 1 for '\0' */
 
 
-struct toggle_paid_args {
-	GtkTreeModel *sorted_model_arg;
-	GtkTreeModel *filter_arg;
-	GtkListStore *model_arg;
+struct treeview_models {
+	GtkTreeModel *sorted_model;
+	GtkTreeModel *filtered_model;
+	GtkListStore *liststore;
 };
 
 extern GtkWidget *amount_entry, *date_entry, *person_entry, *method_entry, *paid_check_button, *error_widget, *scrolled_window, *total_filtered_results_label, *total_results_label, *window;

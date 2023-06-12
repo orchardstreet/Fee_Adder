@@ -7,32 +7,128 @@
 #include "headers/utils.h"
 #include "headers/config.h"
 
-void toggle_paid(GtkCellRendererToggle *cell_render, gchar *path_c, gpointer args_struct)
+void date_edited_callback (GtkCellRendererText *cell, char *path_string, char *new_text, struct treeview_models *models) {
+
+	unsigned int year;
+	unsigned char day;
+	unsigned char month;
+	char date_string[MAX_DATE_CHARS] = {0};
+	unsigned int sortable_date = 0;
+    GtkTreeIter sorted_iter, filter_iter, liststore_iter;
+	(void)cell;
+
+	if(validate_date(new_text,&year,&month,&day) == FAILURE) {
+		return;
+	}
+
+	if(!gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(models->sorted_model), &sorted_iter, (gchar *)path_string)) {
+		fprintf(stderr,"cannot get iter from treeview after toggle\n");
+		return;
+	}
+	gtk_tree_model_sort_convert_iter_to_child_iter(GTK_TREE_MODEL_SORT(models->sorted_model),&filter_iter, &sorted_iter );
+	gtk_tree_model_filter_convert_iter_to_child_iter (GTK_TREE_MODEL_FILTER(models->filtered_model), &liststore_iter, &filter_iter);
+
+	snprintf(date_string,sizeof(date_string),"%02u/%02u/%u",day,month,year);
+	year_month_day_to_sortable_date(year, month,day,&sortable_date);
+
+	gtk_list_store_set(models->liststore,&liststore_iter,
+					   DATE_C,date_string,
+					   YEAR_C, year,
+					   MONTH_C, month,
+					   DAY_C, day,
+					   DATE_SORT_C,sortable_date,
+					   -1);
+}
+
+void customer_edited_callback (GtkCellRendererText *cell, char *path_string, char *new_text,struct treeview_models *models) {
+
+    GtkTreeIter sorted_iter, filter_iter, liststore_iter;
+	(void)cell;
+
+	if(validate_person(new_text) == FAILURE) {
+		return;
+	}
+
+	if(!gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(models->sorted_model), &sorted_iter, (gchar *)path_string)) {
+		fprintf(stderr,"cannot get iter from treeview after toggle\n");
+		return;
+	}
+	gtk_tree_model_sort_convert_iter_to_child_iter(GTK_TREE_MODEL_SORT(models->sorted_model),&filter_iter, &sorted_iter );
+	gtk_tree_model_filter_convert_iter_to_child_iter (GTK_TREE_MODEL_FILTER(models->filtered_model), &liststore_iter, &filter_iter);
+	gtk_list_store_set(models->liststore,&liststore_iter,PERSON_C,new_text,-1);
+
+}
+
+void method_edited_callback (GtkCellRendererText *cell, char *path_string, char *new_text, struct treeview_models *models) {
+
+    GtkTreeIter sorted_iter, filter_iter, liststore_iter;
+	(void)cell;
+
+	if(validate_method(new_text) == FAILURE) {
+		return;
+	}
+
+	if(!gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(models->sorted_model), &sorted_iter, (gchar *)path_string)) {
+		fprintf(stderr,"cannot get iter from treeview after toggle\n");
+		return;
+	}
+	gtk_tree_model_sort_convert_iter_to_child_iter(GTK_TREE_MODEL_SORT(models->sorted_model),&filter_iter, &sorted_iter );
+	gtk_tree_model_filter_convert_iter_to_child_iter (GTK_TREE_MODEL_FILTER(models->filtered_model), &liststore_iter, &filter_iter);
+	gtk_list_store_set(models->liststore,&liststore_iter,PAYMENT_METHOD_C,new_text,-1);
+
+}
+
+void amount_edited_callback (GtkCellRendererText *cell, char *path_string, char *new_text, struct treeview_models *models) {
+
+	unsigned long long number;
+    GtkTreeIter sorted_iter, filter_iter, liststore_iter;
+	(void)cell;
+
+	if(validate_amount(new_text,&number) == FAILURE) {
+		return;
+	}
+
+	/* try to detect if adding a number will overflow UINT64_MAX */
+	if(amount_total + number >= UINT64_MAX || amount_total + number < amount_total) {
+		gtk_text_buffer_set_text(error_buffer,"Cannot add amount. Amount total out of range, should be between"
+				" 0 and UINT64_MAX",-1);
+		fprintf(stderr,"Cannot add amount. Amount total out of range, should be between 0 and UINT64_MAX\n");
+		fprintf(stderr,"amount total: %llu, item_amount: %llu\n",amount_total,number);
+		return;
+	}
+
+	if(!gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(models->sorted_model), &sorted_iter, (gchar *)path_string)) {
+		fprintf(stderr,"cannot get iter from treeview after toggle\n");
+		return;
+	}
+	gtk_tree_model_sort_convert_iter_to_child_iter(GTK_TREE_MODEL_SORT(models->sorted_model),&filter_iter, &sorted_iter );
+	gtk_tree_model_filter_convert_iter_to_child_iter (GTK_TREE_MODEL_FILTER(models->filtered_model), &liststore_iter, &filter_iter);
+	gtk_list_store_set(models->liststore,&liststore_iter,AMOUNT_C,number,-1);
+	add_all_rows(GTK_TREE_MODEL(models->liststore));
+}
+
+void toggle_paid(GtkCellRendererToggle *cell_render, gchar *path_c, struct treeview_models *models)
 {
 	/* init variables */
-	struct toggle_paid_args *args_struct_ptr = (struct toggle_paid_args *) args_struct;
-	GtkTreeModel *sorted_model = args_struct_ptr->sorted_model_arg;
-	GtkTreeModel *filter = args_struct_ptr->filter_arg;
-	GtkListStore *model = args_struct_ptr->model_arg;
 	gboolean is_active;
     GtkTreeIter sorted_iter;
     GtkTreeIter filter_iter;
     GtkTreeIter liststore_iter;
 	(void)cell_render;
 
-	if(!gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(sorted_model), &sorted_iter, (gchar *)path_c)) {
+	if(!gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(models->sorted_model), &sorted_iter, (gchar *)path_c)) {
 		fprintf(stderr,"cannot get iter from treeview after toggle\n");
 		return;
 	}
-	gtk_tree_model_sort_convert_iter_to_child_iter(GTK_TREE_MODEL_SORT(sorted_model),&filter_iter, &sorted_iter );
-	gtk_tree_model_filter_convert_iter_to_child_iter (GTK_TREE_MODEL_FILTER(filter), &liststore_iter, &filter_iter);
+	gtk_tree_model_sort_convert_iter_to_child_iter(GTK_TREE_MODEL_SORT(models->sorted_model),&filter_iter, &sorted_iter );
+	gtk_tree_model_filter_convert_iter_to_child_iter (GTK_TREE_MODEL_FILTER(models->filtered_model), &liststore_iter, &filter_iter);
 
-	gtk_tree_model_get(GTK_TREE_MODEL(model),&liststore_iter,PAID_C,&is_active,-1);
+	gtk_tree_model_get(GTK_TREE_MODEL(models->liststore),&liststore_iter,PAID_C,&is_active,-1);
 
 	if(is_active) {
-		gtk_list_store_set(model,&liststore_iter,PAID_C,0,-1);
+		gtk_list_store_set(models->liststore,&liststore_iter,PAID_C,0,-1);
 	} else {
-		gtk_list_store_set(model,&liststore_iter,PAID_C,1,-1);
+		gtk_list_store_set(models->liststore,&liststore_iter,PAID_C,1,-1);
 	}
 }
 
@@ -44,6 +140,9 @@ void amount_cell_data_func(GtkTreeViewColumn *col,
 						   gpointer user_data) {
 	char amount_string[MAX_AMOUNT_CHARS] = {0};
 	unsigned long long amount;
+	(void)col;
+	(void)user_data;
+
 	gtk_tree_model_get(model,iter,AMOUNT_C,&amount,-1);
 	if(cents_to_string(amount,amount_string) == FAILURE) {
 		g_object_set(renderer,"text","error",NULL);
@@ -119,6 +218,7 @@ void add_single_transaction_from_entryboxes(GtkWidget *widget, gpointer model)
 	unsigned int sortable_date = 0;
 	gboolean is_active = 0;
 	char date_s[MAX_DATE_CHARS] = {0};
+	(void)widget;
 
 	if(validate_date(date_ptr,&year_s,&month_s,&day_s) == FAILURE) {
 		return;

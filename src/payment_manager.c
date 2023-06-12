@@ -45,7 +45,7 @@ int main(int argc, char **argv)
 	GtkListStore *model;
 	GtkTreeModel *filter;
 	GtkTreeModel *sorted_model;
-	struct toggle_paid_args toggle_paid_args1;
+	struct treeview_models models;
 
 	/* Init GTK */
 	gtk_init(&argc,&argv);
@@ -274,7 +274,7 @@ int main(int argc, char **argv)
 		G_TYPE_UINT,  /* eighth column, date sort DATE_SORT_C */
 		G_TYPE_BOOLEAN  /* 1 for show, 0 for hide */
 		);
-	toggle_paid_args1.model_arg = model;
+	models.liststore = model;
 
 	/* Example rows, if any */
 	/*
@@ -288,7 +288,7 @@ int main(int argc, char **argv)
 	/* create treestore as filter of liststore */
 	filter = gtk_tree_model_filter_new(GTK_TREE_MODEL(model),NULL);
 	gtk_tree_model_filter_set_visible_column(GTK_TREE_MODEL_FILTER(filter),TOTAL_COLUMNS - 1);
-	toggle_paid_args1.filter_arg = filter;
+	models.filtered_model = filter;
 
 	/* Add box to window */
 	gtk_container_add(GTK_CONTAINER(window),box);
@@ -306,7 +306,7 @@ int main(int argc, char **argv)
 	sorted_model = gtk_tree_model_sort_new_with_model(filter);
 	/* Sort items by date using DATE_SORT_C column of liststore (which is in format of yyyyymmdd) */
 	gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (sorted_model), DATE_SORT_C, GTK_SORT_ASCENDING);
-	toggle_paid_args1.sorted_model_arg = sorted_model;
+	models.sorted_model = sorted_model;
 
 
 	/* Create treeview from treestore */
@@ -339,6 +339,8 @@ int main(int argc, char **argv)
 	gtk_tree_view_column_set_resizable (column0, TRUE);
 	gtk_tree_view_column_set_sizing (column0, GTK_TREE_VIEW_COLUMN_FIXED);
 	g_object_set(renderer0, "editable", TRUE, NULL);
+	g_signal_connect(renderer0, "edited", G_CALLBACK(date_edited_callback), &models);
+
 
 	/* Treeview column 1, Customer */
 	column1 = gtk_tree_view_column_new();
@@ -353,6 +355,8 @@ int main(int argc, char **argv)
 	gtk_tree_view_column_set_resizable (column1, TRUE);
 	gtk_tree_view_column_set_sizing (column1, GTK_TREE_VIEW_COLUMN_FIXED);
 	g_object_set(renderer1, "editable", TRUE, NULL);
+	g_signal_connect(renderer1, "edited", G_CALLBACK(customer_edited_callback), &models);
+
 
 	/* Treeview column 2, Method */
 	column2 = gtk_tree_view_column_new();
@@ -368,6 +372,7 @@ int main(int argc, char **argv)
 	gtk_tree_view_column_set_resizable (column2, TRUE);
 	gtk_tree_view_column_set_sizing (column2, GTK_TREE_VIEW_COLUMN_FIXED);
 	g_object_set(renderer2, "editable", TRUE, NULL);
+	g_signal_connect(renderer2, "edited", G_CALLBACK(method_edited_callback), &models);
 
 	/* Treeview column 3, Amount */
 	column3 = gtk_tree_view_column_new();
@@ -390,6 +395,7 @@ int main(int argc, char **argv)
 	gtk_tree_view_column_set_sizing (column3, GTK_TREE_VIEW_COLUMN_FIXED);
 	g_object_set(renderer3, "editable", TRUE, NULL);
 	g_object_set (G_OBJECT (renderer3), "xalign", (gfloat) 1.0, NULL);
+	g_signal_connect(renderer3, "edited", G_CALLBACK(amount_edited_callback), &models);
 
 	/* Treeview column 4, Is paid */
 	column4 = gtk_tree_view_column_new();
@@ -407,7 +413,7 @@ int main(int argc, char **argv)
 	gtk_tree_view_column_set_sizing (column4, GTK_TREE_VIEW_COLUMN_FIXED);
 	//g_object_set(renderer4, "editable", TRUE, NULL);
 	//g_object_set (G_OBJECT (renderer3), "xalign", (gfloat) 1.0, NULL);
-	g_signal_connect(renderer4, "toggled", G_CALLBACK(toggle_paid), &toggle_paid_args1);
+	g_signal_connect(renderer4, "toggled", G_CALLBACK(toggle_paid), &models);
 
 	//gtk_tree_view_set_fixed_height_mode(GTK_TREE_VIEW(tree_view,TRUE);
 
