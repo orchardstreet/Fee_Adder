@@ -273,7 +273,7 @@ void add_single_transaction_from_entryboxes(GtkWidget *widget, gpointer model)
 	gtk_entry_set_text(GTK_ENTRY(person_entry), "");
 	gtk_entry_set_text(GTK_ENTRY(amount_entry), "");
 	gtk_entry_set_text(GTK_ENTRY(method_entry), "");
-	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON(paid_check_button),FALSE);
+	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON(paid_check_button),TRUE);
 
 	add_all_rows(GTK_TREE_MODEL(model));
 }

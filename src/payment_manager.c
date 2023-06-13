@@ -146,6 +146,7 @@ int main(int argc, char **argv)
 	paid_check_button = gtk_check_button_new_with_label("Paid");
 	gtk_widget_set_margin_end(paid_check_button,3);
 	gtk_grid_attach(GTK_GRID(grid),paid_check_button,4,1,1,1);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON(paid_check_button),1);
 
 	/* Add 'add' button to value entry grid */
 	add_label = gtk_label_new("");
@@ -328,7 +329,7 @@ int main(int argc, char **argv)
 	/* Add columns to treeview */
 	/* Treeview column 0, Date */
 	column0 = gtk_tree_view_column_new();
-	gtk_tree_view_column_set_title(column0,"Date paid");
+	gtk_tree_view_column_set_title(column0,"Date");
 	gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view),column0);
 	GtkCellRenderer *renderer0;
 	renderer0 = gtk_cell_renderer_text_new();
