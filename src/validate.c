@@ -304,8 +304,8 @@ unsigned char validate_paid_status(char *text,unsigned char *paid_bool)
 	}
 	snprintf(answer,sizeof(answer),"%s",text);
 	for(;(*answer_ptr >= 'a' && *answer_ptr <= 'z') || (*answer_ptr >= 'A' && *answer_ptr <= 'Z');answer_ptr++) {}
-	printf("answer: %s\n",answer);
-	printf("difference: %llu\n",answer_ptr - answer);
+	//printf("answer: %s\n",answer);
+	//printf("difference: %llu\n",answer_ptr - answer);
 	if(answer_ptr - answer != 2 && answer_ptr - answer != 3) {
 		fprintf(stderr,"Must use 2 or 3 ascii characters for 'yes'/'no' in paid status field\n");
 		gtk_text_buffer_set_text(error_buffer,"Must use 2 or 3 ascii characters for 'yes'/'no' in paid status field",-1);
@@ -396,7 +396,7 @@ void year_month_day_to_sortable_date(unsigned int year_i, unsigned char month_s,
 	unsigned int month_i = (unsigned int) month_s;
 	unsigned int day_i = (unsigned int) day_s;
 	*sortable_date = (year_i * 10000) + (month_i * 100) + day_i;
-	printf("sortable date: %u\n",*sortable_date);
+	//printf("sortable date: %u\n",*sortable_date);
 }
 
 unsigned char validate_date (char *text, unsigned int *year_s, unsigned char *month_s, unsigned char *day_s)

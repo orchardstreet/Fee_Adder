@@ -17,6 +17,8 @@ void paid_bool_to_paid_string(unsigned char is_paid, char *str) {
 }
 unsigned char load_items(GtkListStore *model)
 {
+	/* return value FAILURE means fatal error and must exit, return value of UNFINISHED means we
+	 * don't have to exit and can continue with program if we clear the liststore, return value of SUCCESS means do nothing */
 
 	unsigned long long current_line = 0;
 	FILE *the_file;
@@ -46,9 +48,9 @@ unsigned char load_items(GtkListStore *model)
 	the_file = fopen(filename,"r");
 	if(!the_file) {
 		perror("");
-		fprintf(stderr,"%s\n",error_message);
+		fprintf(stderr,"\n",error_message);
 		gtk_text_buffer_set_text(error_buffer,error_message,-1);
-	  	return FAILURE;
+	  	return SUCCESS;
 	}
 
 	snprintf(finished_message,sizeof(finished_message),"Finished loading file at: %s",filename);
@@ -60,21 +62,18 @@ unsigned char load_items(GtkListStore *model)
 		retval = fgets(line,sizeof(line),the_file);
 		if(!retval) {
 			if(ferror(the_file)) {
-				perror("Couldn't fully load file: ");
-				gtk_text_buffer_set_text(error_buffer,"Couldn't fully load file, "
-						"fatal error, should exit program",-1);
+				perror("Error with fgets: ");
+				dialog_popup("Couldn't load save file","Fatal error with fgets while reading file at line %llu",current_line);
 				fclose(the_file);
-				return UNFINISHED;
+				return FAILURE;
 			} else if(feof(the_file)) {
 				if(current_line == 0) {
-					fprintf(stderr,"Empty file, missing csv header, corrupt file %llu\n",current_line);
-					gtk_text_buffer_set_text(error_buffer,"Empty file, missing csv header, corrupt file",-1);
+					fprintf(stderr,"Empty file, missing csv header, corrupt file %llu",current_line);
+					dialog_popup("Couldn't load save file","Corrupt file, missing csv headers");
 					fclose(the_file);
-					return FAILURE;
+					return UNFINISHED;
 				} else if (current_line == 1) {
 					fprintf(stderr,"File is empty, nothing to do\n");
-					gtk_text_buffer_set_text(error_buffer,"Couldn't fully load file, "
-							"unknown error, should exit program",-1);
 					fclose(the_file);
 					return SUCCESS;
 				} else {
@@ -84,8 +83,7 @@ unsigned char load_items(GtkListStore *model)
 				}
 			} else {
 				fprintf(stderr,"Couldn't fully load file, unknown error, should exit program\n");
-				gtk_text_buffer_set_text(error_buffer,"Couldn't fully load file, "
-						"unknown error, should exit program",-1);
+				dialog_popup("Couldn't load save file","Unknown fgets error");
 				fclose(the_file);
 				return UNFINISHED;
 			}
@@ -93,17 +91,16 @@ unsigned char load_items(GtkListStore *model)
 		newline_location = strchr(line,'\n');
 		if(!newline_location) {
 			fprintf(stderr,"No newline at end of line %llu\n",current_line);
-			gtk_text_buffer_set_text(error_buffer,"No newline at end of .csv line."
-					"  File is corrupted, please check file",-1);
+			dialog_popup("Couldn't load save file","No newline at end of line %llu",current_line);
 			fclose(the_file);
 			return UNFINISHED;
 		}
 		if(current_line == 0) {
 			if(strcmp(line,"Day,Month,Year,Customer,Method,Amount,Paid\n")) {
 				fprintf(stderr,"Invalid csv header, corrupt file %llu\n",current_line);
-				gtk_text_buffer_set_text(error_buffer,"Invalid csv header, corrupt file",-1);
+				dialog_popup("Couldn't load save file","Invalid csv header");
 				fclose(the_file);
-				return FAILURE;
+				return UNFINISHED;
 			}
 			continue;
 		}
@@ -115,24 +112,21 @@ unsigned char load_items(GtkListStore *model)
 		/* if no ending comma for day field */
 		if(!end) {
 			fprintf(stderr,"Missing comma on line %llu\n",current_line);
-			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma."
-				      	" File is corrupted, please check file",-1);
+			dialog_popup("Couldn't load save file","Missing comma on line %llu",current_line);
 			fclose(the_file);
 			return UNFINISHED;
 		}
 		/* if day csv field is empty, return */
 		if(!(*token)) {
 			fprintf(stderr,"Missing day on line %llu\n",current_line);
-			gtk_text_buffer_set_text(error_buffer,".csv file is missing day."
-				      	" File is corrupted, please check file",-1);
+			dialog_popup("Couldn't load save file","Missing day on line %llu",current_line);
 			fclose(the_file);
 			return UNFINISHED;
 		}
 		number = strtoul(token,&endptr,10);
 		if(endptr == token || (validate_day(&number) == FAILURE) || *endptr != '\0') {
 			fprintf(stderr,"Missing day on line %llu\n",current_line);
-			gtk_text_buffer_set_text(error_buffer,".csv file is missing day."
-				      	" File is corrupted, please check file",-1);
+			dialog_popup("Couldn't load save file","Missing properly formatted day on line %llu",current_line);
 			fclose(the_file);
 			return UNFINISHED;
 		}
@@ -142,9 +136,8 @@ unsigned char load_items(GtkListStore *model)
 		token = strsep_custom(&end,',');
 		/* if null character after last valid csv field, return */
 		if(!token) {
-			fprintf(stderr,".csv ended prematurely on line %llu, file is corrupted\n",current_line);
-			gtk_text_buffer_set_text(error_buffer,".csv file is missing comma."
-				      	" File is corrupted, please exit program and check file",-1);
+			fprintf(stderr,".csv ended prematurely before day on line %llu, file is corrupted\n",current_line);
+			dialog_popup("Couldn't load save file",".csv ended prematurely before day on line %llu",current_line);
 			fclose(the_file);
 			return UNFINISHED;
 		}
@@ -336,7 +329,7 @@ unsigned char load_items(GtkListStore *model)
 		snprintf(date_s,sizeof(date_s),"%02u/%02u/%u",day,month,year);
 		/* create sortable date */
 		year_month_day_to_sortable_date(year, month,day,&sortable_date);
-		printf("sssortable date: %u\n",sortable_date);
+		//printf("sortable date: %u\n",sortable_date);
 
 		//gtk_widget_freeze_child_notify(GTK_WIDGET(tree_view));
 		gtk_list_store_insert_with_values(model, NULL, -1,
@@ -360,7 +353,6 @@ unsigned char load_items(GtkListStore *model)
 	} /* end of for loop reading file */
 
 	fclose(the_file);
-	printf("success in parsing entire file! :)\n");
 	add_all_rows(GTK_TREE_MODEL(model));
 	return SUCCESS;
 

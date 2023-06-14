@@ -39,25 +39,26 @@ int main(int argc, char **argv)
 
 	/* Init local variables */
 	GtkWidget *grid, *grid2, *grid3, *box, *box2, *box3, *date_label, *person_label,
-		*amount_label, *add_label, *tree_view, *filter_button, *search_button, *edit_button, *add_button,
+		*amount_label, *add_label, *filter_button, *search_button, *edit_button, *add_button,
 		*delete_button, *save_button, *before_totals_seperator, *method_label,
 		*total_filtered_label, *total_label, *paid_label, *paid_status_label;
 	GtkTreeViewColumn *column0, *column1, *column2, *column3, *column4;
-	GtkListStore *model;
-	GtkTreeModel *filter;
-	GtkTreeModel *sorted_model;
-	struct treeview_models models;
+	struct treeview_models payment_record_models;
+	struct treeview_list treeviews;
 
 	/* Init GTK */
 	gtk_init(&argc,&argv);
 
+	/* Intro graphics */
 	printf("\n~~~~~~~ Payment manager 0.1 ~~~~~~~\n\n");
-	printf("%u\n",G_MAXUINT);
 
-	/* Create vertically oriented box to pack program widgets into */
-	box = gtk_box_new(GTK_ORIENTATION_VERTICAL,10);
-	GtkStyleContext *window_context = gtk_widget_get_style_context(box);
-	gtk_style_context_add_class(window_context,"custom_window");
+	/* Check system compatibility */
+	if(check_system_compatibility() == SUCCESS) {
+		printf("[SUCCESS] Using a compatible system\n\n");
+	} else {
+		fprintf(stderr,"exiting...\n");
+		exit(EXIT_FAILURE);
+	}
 
 	/* Create window, set title, border width, and size */
 	windows.main_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -82,6 +83,10 @@ int main(int argc, char **argv)
     GdkScreen* screen = gdk_screen_get_default();
 	gtk_style_context_add_provider_for_screen (screen,GTK_STYLE_PROVIDER(css_provider),GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
+	/* Create the main parent vertically oriented box to pack program widgets into */
+	box = gtk_box_new(GTK_ORIENTATION_VERTICAL,10);
+	GtkStyleContext *window_context = gtk_widget_get_style_context(box);
+	gtk_style_context_add_class(window_context,"custom_window");
 
 	/* Create a frame for value entries */
 	GtkWidget *frame = gtk_frame_new("Add Row");
@@ -92,7 +97,6 @@ int main(int argc, char **argv)
 	/* style frame */
 	GtkStyleContext *frame_context = gtk_widget_get_style_context(frame);
 	gtk_style_context_add_class(frame_context,"custom_frame");
-
 
 	/* Create grid for value entry */
 	grid = gtk_grid_new();
@@ -187,7 +191,6 @@ int main(int argc, char **argv)
 	gtk_style_context_add_class(table_context,"custom_table");
     //gtk_widget_show (scrolled_window);
 
-
 	/* Create grid for right-side buttons */
 	grid2 = gtk_grid_new();
 	gtk_grid_set_row_spacing (GTK_GRID(grid2),20);
@@ -263,7 +266,7 @@ int main(int argc, char **argv)
 
 
 	/* Create liststore for table */
-	model = gtk_list_store_new(
+	payment_record_models.liststore = gtk_list_store_new(
 		TOTAL_COLUMNS,  /* required parameter, total columns */
 		G_TYPE_STRING,  /* 0th column, date, DATE_C */
 		G_TYPE_STRING,  /* first column, person, PERSON_C */
@@ -276,21 +279,11 @@ int main(int argc, char **argv)
 		G_TYPE_UINT,  /* eighth column, date sort DATE_SORT_C */
 		G_TYPE_BOOLEAN  /* 1 for show, 0 for hide */
 		);
-	models.liststore = model;
-
-	/* Example rows, if any */
-	/*
-	gtk_list_store_insert_with_values(model, NULL, -1,
-		DATE_C, "03/22/23",
-		PERSON_C, "Natalie Smith",
-		AMOUNT_C, 100.20,
-		-1);
-	*/
 
 	/* create treestore as filter of liststore */
-	filter = gtk_tree_model_filter_new(GTK_TREE_MODEL(model),NULL);
-	gtk_tree_model_filter_set_visible_column(GTK_TREE_MODEL_FILTER(filter),TOTAL_COLUMNS - 1);
-	models.filtered_model = filter;
+	payment_record_models.filtered_model = gtk_tree_model_filter_new(GTK_TREE_MODEL(payment_record_models.liststore),NULL);
+	gtk_tree_model_filter_set_visible_column(GTK_TREE_MODEL_FILTER(payment_record_models.filtered_model),TOTAL_COLUMNS - 1);
+
 
 	/* Add box to window */
 	gtk_container_add(GTK_CONTAINER(windows.main_window),box);
@@ -298,39 +291,37 @@ int main(int argc, char **argv)
 
 	/* Load items */
 	printf("Loading file from disk...\n");
-	if(load_items(model) == SUCCESS) {
+	if(load_items(payment_record_models.liststore) == SUCCESS) {
 		printf("[SUCCESS] file items loaded successfully\n\n");
 	} else {
 		printf("[FAILURE] file could not be loaded successfully\n\n");
 	}
 
 	/* Create sorted model */
-	sorted_model = gtk_tree_model_sort_new_with_model(filter);
+	payment_record_models.sorted_model = gtk_tree_model_sort_new_with_model(payment_record_models.filtered_model);
 	/* Sort items by date using DATE_SORT_C column of liststore (which is in format of yyyyymmdd) */
-	gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (sorted_model), DATE_SORT_C, GTK_SORT_ASCENDING);
-	models.sorted_model = sorted_model;
-
+	gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (payment_record_models.sorted_model), DATE_SORT_C, GTK_SORT_ASCENDING);
 
 	/* Create treeview from treestore */
-	tree_view = gtk_tree_view_new_with_model(GTK_TREE_MODEL(sorted_model));
+	treeviews.paid_transactions_treeview = gtk_tree_view_new_with_model(GTK_TREE_MODEL(payment_record_models.sorted_model));
 	/* Add tree view to scrolled window */
-	gtk_container_add(GTK_CONTAINER(scrolled_window),tree_view);
+	gtk_container_add(GTK_CONTAINER(scrolled_window),treeviews.paid_transactions_treeview);
 	/* Style for treeview */
-	GtkStyleContext *treeview_context = gtk_widget_get_style_context(tree_view);
-	gtk_style_context_add_class(treeview_context,"custom_treeview");
+	treeviews.paid_transactions_treeview_context = gtk_widget_get_style_context(treeviews.paid_transactions_treeview);
+	gtk_style_context_add_class(treeviews.paid_transactions_treeview_context,"custom_treeview");
 
 	/* Scroll the scrollable window to bottom when the size of treeview changes
 	 * Default behaviour is to hide new rows at bottom for some reason */
-	g_signal_connect (tree_view, "size-allocate", G_CALLBACK (scroll_to_end), NULL);
+	g_signal_connect (treeviews.paid_transactions_treeview, "size-allocate", G_CALLBACK (scroll_to_end), NULL);
 
 	/* Unref treestore */
-	g_object_unref(filter);
+	g_object_unref(payment_record_models.filtered_model);
 
 	/* Add columns to treeview */
 	/* Treeview column 0, Date */
 	column0 = gtk_tree_view_column_new();
 	gtk_tree_view_column_set_title(column0,"Date");
-	gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view),column0);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(treeviews.paid_transactions_treeview),column0);
 	GtkCellRenderer *renderer0;
 	renderer0 = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(column0,renderer0,TRUE);
@@ -341,13 +332,13 @@ int main(int argc, char **argv)
 	gtk_tree_view_column_set_resizable (column0, TRUE);
 	gtk_tree_view_column_set_sizing (column0, GTK_TREE_VIEW_COLUMN_FIXED);
 	g_object_set(renderer0, "editable", TRUE, NULL);
-	g_signal_connect(renderer0, "edited", G_CALLBACK(date_edited_callback), &models);
+	g_signal_connect(renderer0, "edited", G_CALLBACK(date_edited_callback), &payment_record_models);
 
 
 	/* Treeview column 1, Customer */
 	column1 = gtk_tree_view_column_new();
 	gtk_tree_view_column_set_title(column1,"Customer");
-	gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view),column1);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(treeviews.paid_transactions_treeview),column1);
 	GtkCellRenderer *renderer1;
 	renderer1 = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(column1,renderer1,TRUE);
@@ -357,13 +348,13 @@ int main(int argc, char **argv)
 	gtk_tree_view_column_set_resizable (column1, TRUE);
 	gtk_tree_view_column_set_sizing (column1, GTK_TREE_VIEW_COLUMN_FIXED);
 	g_object_set(renderer1, "editable", TRUE, NULL);
-	g_signal_connect(renderer1, "edited", G_CALLBACK(customer_edited_callback), &models);
+	g_signal_connect(renderer1, "edited", G_CALLBACK(customer_edited_callback), &payment_record_models);
 
 
 	/* Treeview column 2, Method */
 	column2 = gtk_tree_view_column_new();
 	gtk_tree_view_column_set_title(column2,"Method");
-	gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view),column2);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(treeviews.paid_transactions_treeview),column2);
 	GtkCellRenderer *renderer2;
 	renderer2 = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(column2,renderer2,TRUE);
@@ -374,12 +365,12 @@ int main(int argc, char **argv)
 	gtk_tree_view_column_set_resizable (column2, TRUE);
 	gtk_tree_view_column_set_sizing (column2, GTK_TREE_VIEW_COLUMN_FIXED);
 	g_object_set(renderer2, "editable", TRUE, NULL);
-	g_signal_connect(renderer2, "edited", G_CALLBACK(method_edited_callback), &models);
+	g_signal_connect(renderer2, "edited", G_CALLBACK(method_edited_callback), &payment_record_models);
 
 	/* Treeview column 3, Amount */
 	column3 = gtk_tree_view_column_new();
 	gtk_tree_view_column_set_title(column3,"Shekels");
-	gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view),column3);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(treeviews.paid_transactions_treeview),column3);
 	GtkCellRenderer *renderer3;
 	renderer3 = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(column3,renderer3,TRUE);
@@ -397,12 +388,12 @@ int main(int argc, char **argv)
 	gtk_tree_view_column_set_sizing (column3, GTK_TREE_VIEW_COLUMN_FIXED);
 	g_object_set(renderer3, "editable", TRUE, NULL);
 	g_object_set (G_OBJECT (renderer3), "xalign", (gfloat) 1.0, NULL);
-	g_signal_connect(renderer3, "edited", G_CALLBACK(amount_edited_callback), &models);
+	g_signal_connect(renderer3, "edited", G_CALLBACK(amount_edited_callback), &payment_record_models);
 
 	/* Treeview column 4, Is paid */
 	column4 = gtk_tree_view_column_new();
 	gtk_tree_view_column_set_title(column4,"Paid");
-	gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view),column4);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(treeviews.paid_transactions_treeview),column4);
 	GtkCellRenderer *renderer4;
 	renderer4 = gtk_cell_renderer_toggle_new();
 	gtk_tree_view_column_pack_start(column4,renderer4,FALSE);
@@ -415,19 +406,15 @@ int main(int argc, char **argv)
 	gtk_tree_view_column_set_sizing (column4, GTK_TREE_VIEW_COLUMN_FIXED);
 	//g_object_set(renderer4, "editable", TRUE, NULL);
 	//g_object_set (G_OBJECT (renderer3), "xalign", (gfloat) 1.0, NULL);
-	g_signal_connect(renderer4, "toggled", G_CALLBACK(toggle_paid), &models);
+	g_signal_connect(renderer4, "toggled", G_CALLBACK(toggle_paid), &payment_record_models);
 
 	//gtk_tree_view_set_fixed_height_mode(GTK_TREE_VIEW(tree_view,TRUE);
 
-	if(check_system_compatibility() == SUCCESS) {
-		printf("[SUCCESS] Using a compatible system\n\n");
-	}
-	/* load items from csv file into liststore, treestore, and treeview */
 
 	/* After clicking add, call 'do_add' function */
-	g_signal_connect(add_button,"clicked",G_CALLBACK(add_single_transaction_from_entryboxes),model);
+	g_signal_connect(add_button,"clicked",G_CALLBACK(add_single_transaction_from_entryboxes),payment_record_models.liststore);
 	/* After clicking save, call 'save_items */
-	g_signal_connect(save_button,"clicked",G_CALLBACK(save_items),GTK_TREE_MODEL(model));
+	g_signal_connect(save_button,"clicked",G_CALLBACK(save_items),GTK_TREE_MODEL(payment_record_models.liststore));
 	/* After pressing a keyboard button, called 'key_press_event */
 	g_signal_connect (G_OBJECT (windows.main_window), "key_press_event", G_CALLBACK (keypress_function), NULL);
 	g_signal_connect (filter_button, "clicked", G_CALLBACK (create_filter_window), NULL);

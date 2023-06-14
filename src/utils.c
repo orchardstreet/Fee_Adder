@@ -3,6 +3,69 @@
 #include <gtk/gtk.h>
 #include "headers/config.h"
 #include "headers/utils.h"
+#include <stdarg.h>
+
+enum arg_types {NONE_C, U_LONG_LONG_C, STRING_C};
+
+void dialog_popup(char *header, const char *body_fmt, ...)
+{
+	const char *browse = body_fmt;
+	const char *arg_type_location;
+	unsigned char arg_type = NONE_C;
+	GtkWidget *message;
+
+	va_list arglist;
+	va_start(arglist,body_fmt);
+
+    message = gtk_message_dialog_new(
+        NULL, GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_OK,
+        "%s",header);
+
+	/* find format args if any */
+	for(;*browse;browse++) {
+		if(*browse == '\\' && *(browse + 1) == '%') {
+			browse++;
+			continue;
+		}
+		if(*browse == '%') {
+			arg_type_location = browse + 1;
+			/* TODO check this for bugs */
+			if(!strncmp(arg_type_location,"llu",3)) {
+				arg_type = U_LONG_LONG_C;
+			} else if (*arg_type_location == 's') {
+				arg_type = STRING_C;
+			}
+			break;
+		}
+	}
+
+	/* create message in window according to args, only supports no arguments or %llu right now */
+	switch(arg_type) {
+		case NONE_C:
+			gtk_message_dialog_format_secondary_text( GTK_MESSAGE_DIALOG(message), "%s","body_fmt");
+			break;
+		case U_LONG_LONG_C:
+			gtk_message_dialog_format_secondary_text( GTK_MESSAGE_DIALOG(message), body_fmt,va_arg(arglist,unsigned long long));
+			break;
+		case STRING_C:
+			gtk_message_dialog_format_secondary_text( GTK_MESSAGE_DIALOG(message), body_fmt,va_arg(arglist,char *));
+			break;
+		default:
+			gtk_message_dialog_format_secondary_text( GTK_MESSAGE_DIALOG(message), "%s","body_fmt");
+			break;
+	}
+
+	va_end(arglist);
+
+	/* launch dialog and wait for user to press 'ok' */
+    int response = gtk_dialog_run(GTK_DIALOG(message));
+	(void)response;
+
+    //printf("response was %d (OK=%d, DELETE_EVENT=%d)\n", response, GTK_RESPONSE_OK, GTK_RESPONSE_DELETE_EVENT);
+
+	/* destroy dialog */
+    gtk_widget_destroy(message);
+}
 
 void skip_whitespace(char **text_skip) {
 	for(;**text_skip == ' ';(*text_skip)++) {};
@@ -98,33 +161,33 @@ unsigned char check_system_compatibility(void)
 			,sizeof(unsigned long),sizeof(unsigned long long));
 
 	if(check_endianness() == IS_BIG_ENDIAN) {
-		gtk_text_buffer_set_text(error_buffer,"Computer should be litte endian, please exit to avoid data issues\n",-1);
+		dialog_popup("Incompatible system","Computer should be litte endian");
 		fprintf(stderr,"Computer should be little endian, please exit to avoid data issues\n");
         return FAILURE;
 	}
 	if (sizeof(void *) != 8) {
-		gtk_text_buffer_set_text(error_buffer,"Error: please use a 64-bit computer, please exit to avoid data issues\n",-1);
+		dialog_popup("Incompatible system","please use a 64-bit computer");
 		fprintf(stderr,"Error: please use a 64-bit computer, please exit to avoid data issues\n");
         return FAILURE;
     }
 	/* warn if compiler didn't create correct length for types */
 	if(sizeof(unsigned char) != 1) {
-		gtk_text_buffer_set_text(error_buffer,"size of unsigned char must equal 1, please exit to avoid data issues\n",-1);
+		dialog_popup("Incompatible system","size of unsigned char must equal 1");
 		fprintf(stderr,"size of unsigned char must equal 1, please exit to avoid data issues\n");
         return FAILURE;
 	}
 	if(sizeof(unsigned int) != 4 || sizeof(signed int) != 4 || sizeof(int) !=  4) {
-		gtk_text_buffer_set_text(error_buffer,"size of unsigned int must equal 4, please exit to avoid data issues\n",-1);
+		dialog_popup("Incompatible system","size of unsigned int must equal 4");
 		fprintf(stderr,"size of unsigned int must equal 4, please exit to avoid data issues\n");
         return FAILURE;
 	}
 	if(sizeof(unsigned long) != 8 && sizeof(unsigned long) != 4) {
-		gtk_text_buffer_set_text(error_buffer,"size of long must equal 8 or 4, please exit to avoid data issues\n",-1);
+		dialog_popup("Incompatible system","size of long must equal 8 or 4");
 		fprintf(stderr,"size of long must equal 8 or 4, please exit to avoid data issues\n");
         return FAILURE;
 	}
 	if(sizeof(unsigned long long) != 8) {
-		gtk_text_buffer_set_text(error_buffer,"size of unsigned long long must equal 8, please exit to avoid data issues\n",-1);
+		dialog_popup("Incompatible system","size of unsigned long long must equal 8");
 		fprintf(stderr,"size of unsigned long long must equal 8, please exit to avoid data issues\n");
         return FAILURE;
 	}

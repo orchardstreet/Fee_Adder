@@ -1,6 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 #include <gtk/gtk.h>
+#include <stdarg.h>
 
 enum endianness {IS_BIG_ENDIAN,IS_LITTLE_ENDIAN};
 
@@ -13,5 +14,6 @@ gboolean keypress_function(GtkWidget *widget, GdkEventKey *event, gpointer data)
 void scroll_to_end (void);
 unsigned char count_digits (unsigned long long n);
 unsigned char check_system_compatibility(void);
+void dialog_popup(char *header, const char* body_fmt, ...);
 
 #endif

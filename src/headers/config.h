@@ -27,6 +27,13 @@ struct treeview_models {
 	GtkListStore *liststore;
 };
 
+struct treeview_list {
+	GtkWidget *paid_transactions_treeview;
+	GtkWidget *unpaid_transactions_treeview;
+	GtkWidget *tenant_list_treeview;
+	GtkStyleContext *paid_transactions_treeview_context;
+};
+
 struct windows_list {
 	GtkWidget *main_window;
 	GtkWidget *filter_window;
